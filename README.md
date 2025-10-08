@@ -51,8 +51,8 @@ Then open this in your browser:
 http://<your-ip>:8000
 ```
 Example: 
-1.`http://192.168.0.105:8000` lan
-2.`http://192.168.0.208:8000` wireless
+1. lan - `http://192.168.0.105:8000` 
+2. wireless - `http://192.168.0.208:8000` 
 
 ## 📁 Default Folder
 
