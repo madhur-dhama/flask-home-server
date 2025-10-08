@@ -21,7 +21,7 @@ Works entirely **offline** on your **local Wi-Fi**, perfect for quick file shari
 
 ## ⚙️ How It Works
 
-Runs a small **Flask web server** that serves the `shared/` folder.  
+Runs a small **Flask web server** that serves the `~/FileShare` folder.  
 You can manage your files through a clean, web-based interface accessible from any device on your Wi-Fi.
 
 ---
@@ -31,28 +31,22 @@ You can manage your files through a clean, web-based interface accessible from a
 ### 1. Clone this repo
 ```bash
 git clone https://github.com/madhur-dhama/flask-home-server.git
-cd flask-home-server
 ```
 
 ### 2. Install dependencies
 ```bash
 python -m venv venv
-source venv/bin/activate
+source ~/venv/bin/activate
 pip install flask
 ```
 
-### 3. Run the server
+### 3. Run the server 
 ```bash
 python app.py
 ```
 
 ### 4. Access it on your phone or another device
-Find your local IP:
-```bash
-hostname -i
-```
-
-Then open in your browser:
+Open in your browser:
 ```
 http://<your-ip>:8000
 ```
@@ -65,8 +59,7 @@ http://<your-ip>:8000
 
 ## ▶️ Quick Start (next time)
 ```bash
-cd flask-home-server
-source venv/bin/activate
+source ~/venv/bin/activate
 python app.py
 ```
 
@@ -76,32 +69,8 @@ python app.py
 
 All files are stored in:
 ```
-shared/
+~/FileShare
 ```
-
-You can change the folder path in `app.py`:
-```python
-SHARED_DIR = os.path.abspath("shared")
-```
-
----
-
-## ⚙️ Configuration
-
-| Option | Description | Default |
-|:--------|:-------------|:---------|
-| `PORT` | Server port | `8000` |
-| `HOST` | Listen address | `0.0.0.0` |
-| `SHARED_DIR` | Shared folder path | `shared/` |
-| `MAX_CONTENT_LENGTH` | Max upload size | `15 GB` |
-
----
-
-## 💡 Use Cases
-
-- Quick file transfer between **Linux and mobile**
-- Offline file sharing on **local Wi-Fi**
-- Temporary **LAN file drop** at home or office
 
 ---
 
