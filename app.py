@@ -2,25 +2,22 @@
 Flask Home Server - Main Application
 Run: python app.py
 """
+import sys
+sys.dont_write_bytecode = True  # Prevent __pycache__ creation
+
 from flask import Flask, render_template, send_from_directory, request, redirect, url_for, flash, jsonify
 from werkzeug.utils import secure_filename
 import os
-import sys
 import tempfile
 
 from utils import human_size, get_safe_path, list_files, get_breadcrumbs
-from config import SHARED_DIR, PORT, HOST, MAX_CONTENT_LENGTH, TEMP_DIR, PYCACHE_DIR
-
-# Setup Python cache directory (keeps __pycache__ hidden)
-os.makedirs(PYCACHE_DIR, exist_ok=True)
-sys.pycache_prefix = PYCACHE_DIR
+from config import SHARED_DIR, PORT, HOST, MAX_CONTENT_LENGTH, TEMP_DIR
 
 # Setup temp directory
 os.makedirs(TEMP_DIR, exist_ok=True)
 tempfile.tempdir = TEMP_DIR
 os.environ['TMPDIR'] = TEMP_DIR
 print(f"Using temp directory: {TEMP_DIR}")
-print(f"Using cache directory: {PYCACHE_DIR}")
 
 # Create shared directory in HOME
 os.makedirs(SHARED_DIR, exist_ok=True)
