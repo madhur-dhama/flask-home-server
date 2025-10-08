@@ -27,7 +27,7 @@ When running, it provides a clean browser interface to manage files over your lo
 ### 1. Clone this repository
 ```bash
 git clone https://github.com/madhur-dhama/flask-home-server.git
-cd flask-file-server
+cd flask-home-server
 ```
 
 ### 2. Install dependencies
