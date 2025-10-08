@@ -1,30 +1,34 @@
 # 🧩 Flask Home Server
 
-A **lightweight Flask-based Home server** for Linux that lets you **browse, upload, download, delete, and organize files** right from your web browser.  
-Works entirely offline — perfect for sharing files between your **laptop and phone** on the same Wi-Fi network.
+A **lightweight local file server** built with Flask for Linux.  
+Browse, upload, download, delete, and organize your files — all from your web browser.  
+Works entirely **offline** on your **local Wi-Fi**, perfect for quick file sharing between your **laptop and phone**.
 
+---
 
 ## 🚀 Features
 
-- 📂 Browse files and folders  
+- 📂 Browse files & folders  
 - ⬆️ Upload files (up to **15 GB**)  
-- ⬇️ Download directly via browser  
+- ⬇️ Download directly from the browser  
 - 🗑️ Delete files or folders  
 - 🪄 Create new folders  
 - 📱 Mobile-friendly interface  
 - ⚡ Works locally — no internet required  
-- 🧰 Single-file app (just run `app.py`)
+- 🧰 Single-file app (`app.py`)
 
+---
 
 ## ⚙️ How It Works
 
-The app starts a **Flask web server** that shares a folder named `shared/`.  
-When running, it provides a clean browser interface to manage files over your local network.
+Runs a small **Flask web server** that serves the `shared/` folder.  
+You can manage your files through a clean, web-based interface accessible from any device on your Wi-Fi.
 
+---
 
 ## 🛠️ Setup
 
-### 1. Clone this repository
+### 1. Clone this repo
 ```bash
 git clone https://github.com/madhur-dhama/flask-home-server.git
 cd flask-home-server
@@ -37,44 +41,50 @@ source venv/bin/activate
 pip install flask
 ```
 
-### 3. Run the app
+### 3. Run the server
 ```bash
 python app.py
 ```
 
-### 4. Access on your phone or another device
+### 4. Access it on your phone or another device
 Find your local IP:
 ```bash
 hostname -i
 ```
 
-Then open this in your browser:
+Then open in your browser:
 ```
 http://<your-ip>:8000
 ```
-Example: 
-1. lan - `http://192.168.0.105:8000` 
-2. wireless - `http://192.168.0.208:8000` 
 
-## Next time run server 
+**Examples:**
+- LAN: `http://192.168.0.105:8000`
+- Wi-Fi: `http://192.168.0.208:8000`
+
+---
+
+## ▶️ Quick Start (next time)
 ```bash
 cd flask-home-server
 source venv/bin/activate
 python app.py
 ```
 
-## 📁 Default Folder
+---
 
-Files are served from the folder:
+## 📁 Shared Folder
+
+All files are stored in:
 ```
 shared/
 ```
-It’s created automatically.  
-You can change it by editing:
+
+You can change the folder path in `app.py`:
 ```python
 SHARED_DIR = os.path.abspath("shared")
 ```
 
+---
 
 ## ⚙️ Configuration
 
@@ -85,34 +95,39 @@ SHARED_DIR = os.path.abspath("shared")
 | `SHARED_DIR` | Shared folder path | `shared/` |
 | `MAX_CONTENT_LENGTH` | Max upload size | `15 GB` |
 
+---
 
-## 🧠 Use Cases
+## 💡 Use Cases
 
-- Quick file transfer between **Linux and mobile**  
-- Offline file sharing on **local Wi-Fi**  
-- Temporary LAN file drop for your home or office  
+- Quick file transfer between **Linux and mobile**
+- Offline file sharing on **local Wi-Fi**
+- Temporary **LAN file drop** at home or office
 
+---
 
 ## 🧑‍💻 Tech Stack
 
 - **Backend:** Flask (Python)  
-- **Frontend:** HTML, CSS, JavaScript  
+- **Frontend:** HTML, CSS, JS  
 - **Platform:** Linux  
 - **Storage:** Local filesystem  
 
+---
 
 ## ⚠️ Note
 
-- This is designed for **local use only**.  
-- There’s **no authentication** — don’t use it on public networks.  
+- Designed for **local use only**.  
+- **No authentication** — avoid using on public or untrusted networks.
 
+---
 
 ## 🏁 License
 
-Licensed under the **MIT License** — free to use, modify, and share.  
+Licensed under the **MIT License** — free to use, modify, and share.
 
+---
 
 ## ✨ Author
 
 **Madhur Dhama**  
-Built for easy offline file sharing using Flask and Linux.  
+Built for simple, offline file sharing using Flask + Linux.
