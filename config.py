@@ -8,8 +8,9 @@ HOST = '0.0.0.0'
 PORT = 8000
 
 # Directory configuration
-SHARED_DIR = os.path.abspath("shared")
-TEMP_DIR = os.path.abspath("flask_temp")
+SHARED_DIR = os.path.join(os.path.expanduser("~"), "FileShare")
+TEMP_DIR = os.path.abspath(".cache/temp")
+PYCACHE_DIR = os.path.abspath(".cache/pycache")
 
 # Upload configuration
 ALLOWED_EXTENSIONS = None  # None = allow all types

@@ -1,22 +1,28 @@
 """
 Flask Home Server - Main Application
-Run: python3 app.py
+Run: python app.py
 """
 from flask import Flask, render_template, send_from_directory, request, redirect, url_for, flash, jsonify
 from werkzeug.utils import secure_filename
 import os
+import sys
 import tempfile
 
 from utils import human_size, get_safe_path, list_files, get_breadcrumbs
-from config import SHARED_DIR, PORT, HOST, MAX_CONTENT_LENGTH, TEMP_DIR
+from config import SHARED_DIR, PORT, HOST, MAX_CONTENT_LENGTH, TEMP_DIR, PYCACHE_DIR
+
+# Setup Python cache directory (keeps __pycache__ hidden)
+os.makedirs(PYCACHE_DIR, exist_ok=True)
+sys.pycache_prefix = PYCACHE_DIR
 
 # Setup temp directory
 os.makedirs(TEMP_DIR, exist_ok=True)
 tempfile.tempdir = TEMP_DIR
 os.environ['TMPDIR'] = TEMP_DIR
 print(f"Using temp directory: {TEMP_DIR}")
+print(f"Using cache directory: {PYCACHE_DIR}")
 
-# Create shared directory
+# Create shared directory in HOME
 os.makedirs(SHARED_DIR, exist_ok=True)
 
 # Initialize Flask app
@@ -24,6 +30,8 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 app.config['MAX_FORM_MEMORY_SIZE'] = MAX_CONTENT_LENGTH
 app.secret_key = 'local-secret-change-if-needed'
+
+print(f"Serving files from: {SHARED_DIR}")
 
 # Routes
 @app.route('/')
