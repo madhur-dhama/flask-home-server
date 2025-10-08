@@ -9,7 +9,7 @@ PORT = 8000
 
 # Directory configuration
 SHARED_DIR = os.path.join(os.path.expanduser("~"), "FileShare")
-TEMP_DIR = os.path.abspath(".tmp")
+TEMP_DIR = os.path.join(os.path.expanduser("~"), ".tmp")
 
 # Upload configuration
 ALLOWED_EXTENSIONS = None  # None = allow all types
