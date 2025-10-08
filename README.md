@@ -51,8 +51,8 @@ Then open this in your browser:
 http://<your-ip>:8000
 ```
 Example: 
-`http://192.168.105:8000` - if connected with lan
-`http://192.168.208:8000` - if connected with wireless
+1.`http://192.168.105:8000` if connected with lan
+2.`http://192.168.208:8000` if connected with wireless
 
 ## 📁 Default Folder
 
