@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>File Share</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📁 File Share</h1>
+      <div class="meta">
+        <span>{{count}} items</span>
+        <span>Max 15GB</span>
+      </div>
+    </div>
+
+    {% if breadcrumbs %}
+    <div class="breadcrumbs">
+      <a href="/" class="breadcrumb-item">🏠</a>
+      {% for crumb in breadcrumbs %}
+        <span class="breadcrumb-sep">›</span>
+        <a href="/browse/{{ crumb.path | urlencode }}" class="breadcrumb-item">{{ crumb.name }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}<div class="notice">✓ {{ messages[0] }}</div>{% endif %}
+    {% endwith %}
+
+    <div class="file-list">
+      {% if files %}
+        {% for f in files %}
+          <div class="file-item">
+            <div class="file-icon {% if f.is_file %}doc{% else %}folder{% endif %}" {% if not f.is_file %}onclick="location.href='/browse/{{ f.path | urlencode }}'"{% endif %}>
+              {% if f.is_file %}📄{% else %}📁{% endif %}
+            </div>
+            <div class="file-info">
+              <div class="file-name">
+                {% if f.is_file %}{{ f.name }}{% else %}<a href="/browse/{{ f.path | urlencode }}">{{ f.name }}</a>{% endif %}
+              </div>
+              <div class="file-meta">
+                <span>{{ f.size if f.size else 'Folder' }}</span>
+                <span>{{ f.mtime }}</span>
+              </div>
+            </div>
+            <div class="file-actions">
+              {% if f.is_file %}<a class="action-btn download-btn" href="/download/{{ f.path | urlencode }}">Download</a>{% endif %}
+              <button class="action-btn delete-btn" onclick="confirmDelete('{{ f.path }}',{{ 'true' if not f.is_file else 'false' }})">Delete</button>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">📭</div>
+          <div>Empty folder. Upload or create!</div>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="action-section">
+      <div class="action-title">Create Folder</div>
+      <form action="/create_folder" method="post" class="folder-input">
+        <input type="hidden" name="current_path" value="{{ current_subpath }}">
+        <input type="text" name="folder_name" placeholder="Folder name..." required>
+        <button type="submit">Create</button>
+      </form>
+
+      <div class="action-title">Upload Files</div>
+      <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="current_path" value="{{ current_subpath }}">
+        <div class="upload-area">
+          <label for="fileInput">
+            <div class="upload-icon">☁️</div>
+            <div class="upload-text">Tap to select files</div>
+            <div class="upload-hint">Max 15GB • Multiple files OK</div>
+          </label>
+          <input type="file" name="files" id="fileInput" multiple required>
+        </div>
+        
+        <div class="selected-file" id="selectedFile">
+          <span class="selected-file-name" id="selectedFileName"></span>
+          <button type="button" class="remove-file" id="removeFile">✕</button>
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary" id="uploadBtn">Upload</button>
+          <button type="button" class="btn btn-secondary" onclick="location.reload()">Refresh</button>
+        </div>
+      </form>
+
+      <div id="progressContainer" class="progress-container">
+        <div class="progress-label" id="progressLabel">Uploading...</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBar" style="width:0"></div>
+        </div>
+        <div class="progress-stats">
+          <span id="progressPercent">0%</span>
+          <span id="progressTime">Calculating...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="deleteModal">
+    <div class="modal-content">
+      <div class="modal-title">⚠️ Confirm Delete</div>
+      <div class="modal-text" id="deleteText"></div>
+      <div class="modal-buttons">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn" style="background:#ef4444;color:#fff" onclick="executeDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
