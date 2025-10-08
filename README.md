@@ -39,7 +39,7 @@ pip install flask
 
 ### 3. Run the app
 ```bash
-python3 app.py
+python app.py
 ```
 
 ### 4. Access on your phone or another device
@@ -55,6 +55,13 @@ http://<your-ip>:8000
 Example: 
 1. lan - `http://192.168.0.105:8000` 
 2. wireless - `http://192.168.0.208:8000` 
+
+## Next time run server 
+```bash
+cd flask-home-server
+source venv/bin/activate
+python app.py
+```
 
 ## 📁 Default Folder
 
