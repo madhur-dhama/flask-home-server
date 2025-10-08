@@ -1,6 +1,6 @@
-# 🧩 Flask File Server
+# 🧩 Flask Home Server
 
-A **lightweight Flask-based file server** for Linux that lets you **browse, upload, download, delete, and organize files** right from your web browser.  
+A **lightweight Flask-based Home server** for Linux that lets you **browse, upload, download, delete, and organize files** right from your web browser.  
 Works entirely offline — perfect for sharing files between your **laptop and phone** on the same Wi-Fi network.
 
 
@@ -26,7 +26,7 @@ When running, it provides a clean browser interface to manage files over your lo
 
 ### 1. Clone this repository
 ```bash
-git clone https://github.com/your-username/flask-file-server.git
+git clone https://github.com/madhur-dhama/flask-file-server.git
 cd flask-file-server
 ```
 
@@ -43,15 +43,16 @@ python3 app.py
 ### 4. Access on your phone or another device
 Find your local IP:
 ```bash
-hostname -I
+hostname -i
 ```
 
 Then open this in your browser:
 ```
 http://<your-ip>:8000
 ```
-Example: `http://192.168.1.5:8000`
-
+Example: 
+`http://192.168.105:8000` - if connected with lan
+`http://192.168.208:8000` - if connected with wireless
 
 ## 📁 Default Folder
 
