@@ -40,7 +40,7 @@ form.onsubmit = e => {
   const files = fileInput.files;
   if (!files.length) return;
 
-  const max = 15 * 1024 * 1024 * 1024;
+  const max = 100 * 1024 * 1024 * 1024;
   for (let f of files) {
     if (f.size > max) {
       alert(`❌ "${f.name}" is too large! Max 15GB`);

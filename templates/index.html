@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>File Share</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .play-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+    }
+  </style>
+
 </head>
 <body>
   <div class="container">
@@ -12,7 +19,7 @@
       <h1>📁 File Share</h1>
       <div class="meta">
         <span>{{count}} items</span>
-        <span>Max 15GB</span>
+        <span>Max 100GB</span>
       </div>
     </div>
 
@@ -35,7 +42,11 @@
         {% for f in files %}
           <div class="file-item">
             <div class="file-icon {% if f.is_file %}doc{% else %}folder{% endif %}" {% if not f.is_file %}onclick="location.href='/browse/{{ f.path | urlencode }}'"{% endif %}>
-              {% if f.is_file %}📄{% else %}📁{% endif %}
+              {% if f.is_file %}
+                {% if f.is_media %}🎵{% else %}📄{% endif %}
+              {% else %}
+                📁
+              {% endif %}
             </div>
             <div class="file-info">
               <div class="file-name">
@@ -47,14 +58,19 @@
               </div>
             </div>
             <div class="file-actions">
-              {% if f.is_file %}<a class="action-btn download-btn" href="/download/{{ f.path | urlencode }}">Download</a>{% endif %}
+              {% if f.is_file %}
+                {% if f.is_media %}
+                  <a class="action-btn play-btn" href="/play/{{ f.path | urlencode }}">Play</a>
+                {% endif %}
+                <a class="action-btn download-btn" href="/download/{{ f.path | urlencode }}">Download</a>
+              {% endif %}
               <button class="action-btn delete-btn" onclick="confirmDelete('{{ f.path }}',{{ 'true' if not f.is_file else 'false' }})">Delete</button>
             </div>
           </div>
         {% endfor %}
       {% else %}
         <div class="empty-state">
-          <div class="empty-state-icon">📭</div>
+          <div class="empty-state-icon">🔭</div>
           <div>Empty folder. Upload or create!</div>
         </div>
       {% endif %}

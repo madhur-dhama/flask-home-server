@@ -14,6 +14,13 @@ def human_size(n):
         n /= 1024.0
     return f"{n:.1f} PB"
 
+def is_media_file(filename):
+    """Check if file is audio or video"""
+    ext = os.path.splitext(filename)[1].lower()
+    media_exts = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac', '.opus',
+                  '.mp4', '.webm', '.ogv', '.mkv', '.avi', '.mov', '.m4v']
+    return ext in media_exts
+
 def get_safe_path(subpath=''):
     """Get a safe path within SHARED_DIR, preventing directory traversal"""
     if subpath:
@@ -36,6 +43,7 @@ def list_files(current_path):
             'name': entry.name,
             'path': rel_path,
             'is_file': entry.is_file(),
+            'is_media': is_media_file(entry.name) if entry.is_file() else False,
             'size': human_size(stat.st_size) if entry.is_file() else '',
             'mtime': datetime.datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
         })
