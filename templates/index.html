@@ -5,18 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>File Share</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <style>
-    .play-btn {
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: #fff;
-    }
-  </style>
-
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>📁 File Share</h1>
+      <h1>File Share</h1>
       <div class="meta">
         <span>{{count}} items</span>
         <span>Max 100GB</span>
@@ -25,7 +18,7 @@
 
     {% if breadcrumbs %}
     <div class="breadcrumbs">
-      <a href="/" class="breadcrumb-item">🏠</a>
+      <a href="/" class="breadcrumb-item">🏠Home</a>
       {% for crumb in breadcrumbs %}
         <span class="breadcrumb-sep">›</span>
         <a href="/browse/{{ crumb.path | urlencode }}" class="breadcrumb-item">{{ crumb.name }}</a>
@@ -41,9 +34,9 @@
       {% if files %}
         {% for f in files %}
           <div class="file-item">
-            <div class="file-icon {% if f.is_file %}doc{% else %}folder{% endif %}" {% if not f.is_file %}onclick="location.href='/browse/{{ f.path | urlencode }}'"{% endif %}>
+            <div class="file-icon {% if f.is_file %}{% if f.media_type == 'video' %}video{% elif f.media_type == 'audio' %}audio{% else %}doc{% endif %}{% else %}folder{% endif %}" {% if not f.is_file %}onclick="location.href='/browse/{{ f.path | urlencode }}'"{% endif %}>
               {% if f.is_file %}
-                {% if f.is_media %}🎵{% else %}📄{% endif %}
+                {% if f.media_type == 'video' %}▶{% elif f.media_type == 'audio' %}♫{% else %}📄{% endif %}
               {% else %}
                 📁
               {% endif %}
@@ -64,26 +57,18 @@
                 {% endif %}
                 <a class="action-btn download-btn" href="/download/{{ f.path | urlencode }}">Download</a>
               {% endif %}
-              <button class="action-btn delete-btn" onclick="confirmDelete('{{ f.path }}',{{ 'true' if not f.is_file else 'false' }})">Delete</button>
             </div>
           </div>
         {% endfor %}
       {% else %}
         <div class="empty-state">
-          <div class="empty-state-icon">🔭</div>
-          <div>Empty folder. Upload or create!</div>
+          <div class="empty-state-icon">📭</div>
+          <div>This folder is empty</div>
         </div>
       {% endif %}
     </div>
 
     <div class="action-section">
-      <div class="action-title">Create Folder</div>
-      <form action="/create_folder" method="post" class="folder-input">
-        <input type="hidden" name="current_path" value="{{ current_subpath }}">
-        <input type="text" name="folder_name" placeholder="Folder name..." required>
-        <button type="submit">Create</button>
-      </form>
-
       <div class="action-title">Upload Files</div>
       <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
         <input type="hidden" name="current_path" value="{{ current_subpath }}">
@@ -91,7 +76,7 @@
           <label for="fileInput">
             <div class="upload-icon">☁️</div>
             <div class="upload-text">Tap to select files</div>
-            <div class="upload-hint">Max 15GB • Multiple files OK</div>
+            <div class="upload-hint">Max 100GB • Multiple files OK</div>
           </label>
           <input type="file" name="files" id="fileInput" multiple required>
         </div>
@@ -116,17 +101,6 @@
           <span id="progressPercent">0%</span>
           <span id="progressTime">Calculating...</span>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal" id="deleteModal">
-    <div class="modal-content">
-      <div class="modal-title">⚠️ Confirm Delete</div>
-      <div class="modal-text" id="deleteText"></div>
-      <div class="modal-buttons">
-        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button class="btn" style="background:#ef4444;color:#fff" onclick="executeDelete()">Delete</button>
       </div>
     </div>
   </div>

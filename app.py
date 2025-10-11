@@ -5,7 +5,7 @@ Run: python app.py
 import sys
 sys.dont_write_bytecode = True  # Prevent __pycache__ creation
 
-from flask import Flask, render_template, send_from_directory, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, send_from_directory, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
 import os
 import tempfile
@@ -131,54 +131,10 @@ def upload():
         current_path = request.form.get('current_path', '')
         return redirect(f'/browse/{current_path}' if current_path else '/')
 
-@app.route('/delete/<path:filepath>', methods=['POST'])
-def delete(filepath):
-    try:
-        import shutil
-        full_path = get_safe_path(filepath)
-        
-        if not os.path.exists(full_path):
-            return jsonify({'success': False, 'error': 'File not found'}), 404
-        
-        if os.path.isfile(full_path):
-            os.remove(full_path)
-        else:
-            shutil.rmtree(full_path)
-        
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/create_folder', methods=['POST'])
-def create_folder():
-    try:
-        current_path = request.form.get('current_path', '')
-        folder_name = request.form.get('folder_name', '').strip()
-        
-        if not folder_name:
-            flash('Folder name cannot be empty')
-            return redirect(f'/browse/{current_path}' if current_path else '/')
-        
-        safe_name = secure_filename(folder_name)
-        base_dir = get_safe_path(current_path)
-        folder_path = os.path.join(base_dir, safe_name)
-        
-        if os.path.exists(folder_path):
-            flash(f'Folder "{safe_name}" already exists')
-        else:
-            os.makedirs(folder_path)
-            flash(f'Created folder: {safe_name}')
-        
-        return redirect(f'/browse/{current_path}' if current_path else '/')
-    except Exception as e:
-        flash(f'Error creating folder: {str(e)}')
-        current_path = request.form.get('current_path', '')
-        return redirect(f'/browse/{current_path}' if current_path else '/')
-
 if __name__ == '__main__':
     print(f"Serving folder: {SHARED_DIR}")
     print(f"Open on phone: http://<your-ip>:{PORT}")
-    print(f"Max upload size: 15 GB")
+    print(f"Max upload size: 100 GB")
     
     # Increase Werkzeug limits for large file uploads
     import werkzeug

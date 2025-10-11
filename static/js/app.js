@@ -1,4 +1,4 @@
-// Compact File Browser JS
+// Simple File Browser JS - No Delete/Create Folder
 const form = document.getElementById('uploadForm');
 const fileInput = document.getElementById('fileInput');
 const uploadBtn = document.getElementById('uploadBtn');
@@ -9,11 +9,8 @@ const progressBar = document.getElementById('progressBar');
 const progressLabel = document.getElementById('progressLabel');
 const progressPercent = document.getElementById('progressPercent');
 const progressTime = document.getElementById('progressTime');
-const deleteModal = document.getElementById('deleteModal');
-const deleteText = document.getElementById('deleteText');
 
 let uploadStart = null;
-let deleteTarget = null;
 
 // File selection
 fileInput.onchange = () => {
@@ -40,10 +37,10 @@ form.onsubmit = e => {
   const files = fileInput.files;
   if (!files.length) return;
 
-  const max = 100 * 1024 * 1024 * 1024;
+  const max = 100 * 1024 * 1024 * 1024; // 100GB
   for (let f of files) {
     if (f.size > max) {
-      alert(`❌ "${f.name}" is too large! Max 15GB`);
+      alert(`❌ "${f.name}" is too large! Max 100GB`);
       return;
     }
   }
@@ -95,30 +92,6 @@ form.onsubmit = e => {
   xhr.open('POST', '/upload');
   xhr.send(formData);
 };
-
-// Delete
-function confirmDelete(path, isFolder) {
-  deleteTarget = path;
-  const name = path.split('/').pop();
-  deleteText.textContent = isFolder
-    ? `Delete folder "${name}" and all contents?`
-    : `Delete "${name}"?`;
-  deleteModal.classList.add('show');
-}
-
-function closeModal() {
-  deleteModal.classList.remove('show');
-  deleteTarget = null;
-}
-
-function executeDelete() {
-  if (!deleteTarget) return;
-  fetch('/delete/' + encodeURIComponent(deleteTarget), { method: 'POST' })
-    .then(r => r.json())
-    .then(d => d.success ? location.reload() : alert('❌ ' + d.error))
-    .catch(() => alert('❌ Delete failed'));
-  closeModal();
-}
 
 // Utils
 function formatBytes(b) {
