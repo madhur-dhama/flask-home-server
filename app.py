@@ -30,6 +30,31 @@ app.secret_key = 'local-secret-change-if-needed'
 
 print(f"Serving files from: {SHARED_DIR}")
 
+# Helper function to calculate directory size
+def get_directory_size(path):
+    total = 0
+    try:
+        for entry in os.scandir(path):
+            if entry.is_file():
+                total += entry.stat().st_size
+            elif entry.is_dir():
+                total += get_directory_size(entry.path)
+    except:
+        pass
+    return total
+
+# Helper function to get storage left
+def get_storage_left():
+    total_limit = MAX_CONTENT_LENGTH
+    used_space = get_directory_size(SHARED_DIR)
+    free_space = total_limit - used_space
+    
+    # If negative, show 0
+    if free_space < 0:
+        free_space = 0
+    
+    return human_size(free_space)
+
 # Routes
 @app.route('/')
 @app.route('/browse/')
@@ -38,11 +63,14 @@ def browse(subpath=''):
     current_path = get_safe_path(subpath)
     files = list_files(current_path)
     breadcrumbs = get_breadcrumbs(current_path)
+    storage_left = get_storage_left()
+    
     return render_template('index.html', 
                          files=files, 
                          count=len(files), 
                          breadcrumbs=breadcrumbs, 
-                         current_subpath=subpath)
+                         current_subpath=subpath,
+                         storage_left=storage_left)
 
 @app.route('/download/<path:filepath>')
 def download(filepath):
@@ -90,6 +118,22 @@ def upload():
     try:
         print(f"Upload request received. Content-Length: {request.content_length}")
         
+        # Check storage before upload
+        total_limit = MAX_CONTENT_LENGTH
+        used_space = get_directory_size(SHARED_DIR)
+        free_space = total_limit - used_space
+        
+        if free_space <= 0:
+            flash('Storage is full! Cannot upload files.')
+            current_path = request.form.get('current_path', '')
+            return redirect(f'/browse/{current_path}' if current_path else '/')
+        
+        # Check if upload will exceed limit
+        if request.content_length and request.content_length > free_space:
+            flash(f'Not enough storage! Available: {human_size(free_space)}, Upload size: {human_size(request.content_length)}')
+            current_path = request.form.get('current_path', '')
+            return redirect(f'/browse/{current_path}' if current_path else '/')
+        
         current_path = request.form.get('current_path', '')
         upload_dir = get_safe_path(current_path)
         
@@ -130,7 +174,7 @@ def upload():
         flash(f'Upload error: {str(e)}')
         current_path = request.form.get('current_path', '')
         return redirect(f'/browse/{current_path}' if current_path else '/')
-
+    
 if __name__ == '__main__':
     print(f"Serving folder: {SHARED_DIR}")
     print(f"Open on phone: http://<your-ip>:{PORT}")

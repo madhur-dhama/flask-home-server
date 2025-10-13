@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,6 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>File Share</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
 </head>
 <body>
   <div class="container">
@@ -12,7 +14,7 @@
       <h1>File Share</h1>
       <div class="meta">
         <span>{{count}} items</span>
-        <span>Max 100GB</span>
+        <span>{{ storage_left }} left</span>
       </div>
     </div>
 
@@ -36,9 +38,9 @@
           <div class="file-item">
             <div class="file-icon {% if f.is_file %}{% if f.media_type == 'video' %}video{% elif f.media_type == 'audio' %}audio{% else %}doc{% endif %}{% else %}folder{% endif %}" {% if not f.is_file %}onclick="location.href='/browse/{{ f.path | urlencode }}'"{% endif %}>
               {% if f.is_file %}
-                {% if f.media_type == 'video' %}▶{% elif f.media_type == 'audio' %}♫{% else %}📄{% endif %}
+                {% if f.media_type == 'video' %}<i class="fas fa-video"></i>{% elif f.media_type == 'audio' %}<i class="fas fa-music"></i>{% else %}<i class="fas fa-file"></i>{% endif %}
               {% else %}
-                📁
+                <i class="fas fa-folder"></i>
               {% endif %}
             </div>
             <div class="file-info">
@@ -46,8 +48,11 @@
                 {% if f.is_file %}{{ f.name }}{% else %}<a href="/browse/{{ f.path | urlencode }}">{{ f.name }}</a>{% endif %}
               </div>
               <div class="file-meta">
-                <span>{{ f.size if f.size else 'Folder' }}</span>
-                <span>{{ f.mtime }}</span>
+                {% if f.size %}
+                  <span class="file-size">{{ f.size }}</span>
+                {% else %}
+                  <span class="file-size">Folder</span>
+                {% endif %}
               </div>
             </div>
             <div class="file-actions">
@@ -76,7 +81,7 @@
           <label for="fileInput">
             <div class="upload-icon">☁️</div>
             <div class="upload-text">Tap to select files</div>
-            <div class="upload-hint">Max 100GB • Multiple files OK</div>
+            <div class="upload-hint">Max 100GB • Multiple files</div>
           </label>
           <input type="file" name="files" id="fileInput" multiple required>
         </div>

@@ -9,6 +9,7 @@ const progressBar = document.getElementById('progressBar');
 const progressLabel = document.getElementById('progressLabel');
 const progressPercent = document.getElementById('progressPercent');
 const progressTime = document.getElementById('progressTime');
+const removeFile = document.getElementById('removeFile');
 
 let uploadStart = null;
 
@@ -38,15 +39,18 @@ form.onsubmit = e => {
   if (!files.length) return;
 
   const max = 100 * 1024 * 1024 * 1024; // 100GB
+  let totalSize = 0;
+  
   for (let f of files) {
+    totalSize += f.size;
     if (f.size > max) {
-      alert(`❌ "${f.name}" is too large! Max 100GB`);
+      alert(`❌ "${f.name}" is too large! Max 100GB per file`);
       return;
     }
   }
 
   const formData = new FormData(form);
-  progressContainer.classList.add('active');
+  progressContainer.classList.add('show');
   uploadBtn.disabled = true;
   fileInput.disabled = true;
   uploadStart = Date.now();
@@ -60,9 +64,10 @@ form.onsubmit = e => {
     progressBar.style.width = pct + '%';
     progressPercent.textContent = pct + '%';
     
+    // Simplified progress label for mobile
     progressLabel.textContent = files.length === 1
-      ? `${files[0].name} - ${formatBytes(e.loaded)}/${formatBytes(e.total)}`
-      : `${files.length} files - ${formatBytes(e.loaded)}/${formatBytes(e.total)}`;
+      ? `${files[0].name}`
+      : `${files.length} files`;
     
     const elapsed = (Date.now() - uploadStart) / 1000;
     if (elapsed > 1) {
@@ -72,12 +77,23 @@ form.onsubmit = e => {
   };
 
   xhr.onload = () => {
-    if (xhr.status === 200 || xhr.status === 302) {
-      progressLabel.textContent = '✓ Complete!';
-      progressBar.style.width = '100%';
-      progressPercent.textContent = '100%';
-      progressTime.textContent = 'Done!';
-      setTimeout(() => location.reload(), 800);
+    if (xhr.status === 200) {
+      // Check if there's an error message in the response
+      const responseText = xhr.responseText;
+      if (responseText.includes('Not enough storage') || responseText.includes('Storage is full')) {
+        alert('❌ Not enough storage! Upload cancelled.');
+        resetForm();
+        setTimeout(() => location.reload(), 500);
+      } else {
+        progressLabel.textContent = '✓ Complete!';
+        progressBar.style.width = '100%';
+        progressPercent.textContent = '100%';
+        progressTime.textContent = 'Done!';
+        setTimeout(() => location.reload(), 800);
+      }
+    } else if (xhr.status === 302) {
+      // Redirect - could be success or error, reload to check
+      setTimeout(() => location.reload(), 300);
     } else {
       alert('❌ Upload failed: ' + xhr.statusText);
       resetForm();
@@ -108,7 +124,7 @@ function formatTime(s) {
 }
 
 function resetForm() {
-  progressContainer.classList.remove('active');
+  progressContainer.classList.remove('show');
   uploadBtn.disabled = false;
   fileInput.disabled = false;
   fileInput.value = '';
