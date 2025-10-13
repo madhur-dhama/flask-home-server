@@ -136,13 +136,13 @@ body {
 }
 
 .file-icon.folder {
-  background: hsl(45, 90%, 55%);
-  color: hsl(45, 20%, 20%);
+  background: hsl(45, 90%, 50%);
+  color: hsl(280, 10%, 98%);
   cursor: pointer;
 }
 
 .file-icon.video {
-  background: hsl(280, 70%, 55%);
+  background: hsl(160, 70%, 45%);
   color: hsl(280, 10%, 98%);
 }
 
@@ -214,12 +214,12 @@ body {
 }
 
 .play-btn {
-  background: hsl(280, 70%, 50%);
+  background: hsl(160, 70%, 45%);
   color: hsl(280, 10%, 98%);
 }
 
 .play-btn:active {
-  background: hsl(280, 70%, 45%);
+  background: hsl(160, 70%, 40%);
 }
 
 .download-btn {
@@ -484,7 +484,7 @@ input[type="file"] {
   }
 
   .play-btn:hover {
-    background: hsl(280, 70%, 55%);
+    background: hsl(160, 70%, 48%);
   }
 
   .download-btn:hover {
