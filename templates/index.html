@@ -36,9 +36,9 @@
       {% if files %}
         {% for f in files %}
           <div class="file-item">
-            <div class="file-icon {% if f.is_file %}doc{% else %}folder{% endif %}" {% if not f.is_file %}onclick="location.href='/browse/{{ f.path | urlencode }}'"{% endif %}>
+            <div class="file-icon {% if f.is_file %}{% if f.media_type == 'video' %}video{% elif f.media_type == 'audio' %}audio{% else %}doc{% endif %}{% else %}folder{% endif %}" {% if not f.is_file %}onclick="location.href='/browse/{{ f.path | urlencode }}'"{% endif %}>
               {% if f.is_file %}
-                <i class="fas fa-file"></i>
+                {% if f.media_type == 'video' %}<i class="fas fa-video"></i>{% elif f.media_type == 'audio' %}<i class="fas fa-music"></i>{% else %}<i class="fas fa-file"></i>{% endif %}
               {% else %}
                 <i class="fas fa-folder"></i>
               {% endif %}
@@ -57,6 +57,9 @@
             </div>
             <div class="file-actions">
               {% if f.is_file %}
+                {% if f.is_media %}
+                  <a class="action-btn play-btn" href="/play/{{ f.path | urlencode }}">Play</a>
+                {% endif %}
                 <a class="action-btn download-btn" href="/download/{{ f.path | urlencode }}">Download</a>
               {% endif %}
             </div>
