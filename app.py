@@ -64,13 +64,28 @@ def browse(subpath=''):
     files = list_files(current_path)
     breadcrumbs = get_breadcrumbs(current_path)
     storage_left = get_storage_left()
-    
-    return render_template('index.html', 
-                         files=files, 
-                         count=len(files), 
-                         breadcrumbs=breadcrumbs, 
-                         current_subpath=subpath,
-                         storage_left=storage_left)
+
+    # Pagination setup
+    page = request.args.get('page', 1, type=int)
+    per_page = 50
+    total_files = len(files)
+    total_pages = (total_files + per_page - 1) // per_page
+
+    start = (page - 1) * per_page
+    end = start + per_page
+    files_paginated = files[start:end]
+
+    return render_template(
+        'index.html',
+        files=files_paginated,
+        count=total_files,
+        breadcrumbs=breadcrumbs,
+        current_subpath=subpath,
+        storage_left=storage_left,
+        page=page,
+        total_pages=total_pages
+    )
+
 
 @app.route('/download/<path:filepath>')
 def download(filepath):

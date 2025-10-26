@@ -504,3 +504,31 @@ input[type="file"] {
     font-size: 0.75rem;
   }
 }
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.pagination-number {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 5px;
+  text-decoration: none;
+  color: #007bff;
+  transition: background 0.2s;
+}
+
+.pagination-number:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.pagination-number.active {
+  font-weight: bold;
+  background-color: #007bff;
+  color: white;
+}
