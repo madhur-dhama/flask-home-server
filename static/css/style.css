@@ -77,10 +77,6 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-.breadcrumb-item:active {
-  color: hsl(210, 100%, 65%);
-}
-
 .breadcrumb-sep {
   color: hsl(235, 8%, 45%);
   margin: 0 0.125rem;
@@ -116,11 +112,6 @@ body {
   transition: background 0.15s;
   border: 1px solid transparent;
   -webkit-tap-highlight-color: transparent;
-}
-
-.file-item:active {
-  background: hsl(235, 22%, 18%);
-  border-color: hsl(235, 15%, 28%);
 }
 
 .file-icon {
@@ -168,10 +159,6 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-.file-name a:active {
-  color: hsl(210, 100%, 65%);
-}
-
 .file-meta {
   display: flex;
   gap: 0.75rem;
@@ -206,10 +193,6 @@ body {
 .download-btn {
   background: hsl(210, 80%, 50%);
   color: hsl(210, 10%, 98%);
-}
-
-.download-btn:active {
-  background: hsl(210, 80%, 45%);
 }
 
 /* Empty State */
@@ -250,11 +233,6 @@ body {
   transition: all 0.2s;
   margin-bottom: 1rem;
   -webkit-tap-highlight-color: transparent;
-}
-
-.upload-area:active {
-  border-color: hsl(210, 80%, 55%);
-  background: hsl(235, 22%, 16%);
 }
 
 .upload-area label {
@@ -317,10 +295,6 @@ input[type="file"] {
   -webkit-tap-highlight-color: transparent;
 }
 
-.remove-file:active {
-  background: hsl(0, 65%, 45%);
-}
-
 .btn-group {
   display: flex;
   flex-direction: column;
@@ -346,18 +320,10 @@ input[type="file"] {
   color: hsl(210, 10%, 98%);
 }
 
-.btn-primary:active {
-  background: hsl(210, 100%, 50%);
-}
-
 .btn-secondary {
   background: hsl(235, 20%, 22%);
   color: hsl(235, 10%, 85%);
   border: 1px solid hsl(235, 15%, 28%);
-}
-
-.btn-secondary:active {
-  background: hsl(235, 20%, 20%);
 }
 
 /* Progress Container */
