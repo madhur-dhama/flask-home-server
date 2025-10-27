@@ -94,6 +94,40 @@ def download(filepath):
     filename = os.path.basename(full_path)
     return send_from_directory(directory, filename, as_attachment=True)
 
+@app.route('/stream/<path:filepath>')
+def stream(filepath):
+    full_path = get_safe_path(filepath)
+    directory = os.path.dirname(full_path)
+    filename = os.path.basename(full_path)
+    return send_from_directory(directory, filename, as_attachment=False)
+
+@app.route('/play/<path:filepath>')
+def play(filepath):
+    full_path = get_safe_path(filepath)
+    if not os.path.exists(full_path):
+        flash('File not found')
+        return redirect('/')
+    
+    filename = os.path.basename(full_path)
+    file_ext = os.path.splitext(filename)[1].lower()
+    
+    # Determine media type
+    audio_exts = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac', '.opus']
+    video_exts = ['.mp4', '.webm', '.ogv', '.mkv', '.avi', '.mov', '.m4v']
+    
+    if file_ext in audio_exts:
+        media_type = 'audio'
+    elif file_ext in video_exts:
+        media_type = 'video'
+    else:
+        flash('Unsupported media format')
+        return redirect('/')
+    
+    return render_template('player.html', 
+                         filepath=filepath, 
+                         filename=filename,
+                         media_type=media_type)
+
 @app.route('/upload', methods=['POST'])
 def upload():
     try:

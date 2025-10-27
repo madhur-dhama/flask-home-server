@@ -57,6 +57,9 @@
             </div>
             <div class="file-actions">
               {% if f.is_file %}
+                {% if f.is_media %}
+                  <a class="action-btn play-btn" href="/play/{{ f.path | urlencode }}">Play</a>
+                {% endif %}
                 <a class="action-btn download-btn" href="/download/{{ f.path | urlencode }}">Download</a>
               {% endif %}
             </div>

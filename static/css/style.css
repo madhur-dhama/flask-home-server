@@ -132,6 +132,16 @@ body {
   cursor: pointer;
 }
 
+.file-icon.video {
+  background: hsl(280, 70%, 55%);
+  color: hsl(280, 10%, 98%);
+}
+
+.file-icon.audio {
+  background: hsl(280, 70%, 55%);
+  color: hsl(160, 10%, 98%);
+}
+
 .file-icon.doc {
   background: hsl(210, 80%, 55%);
   color: hsl(210, 10%, 98%);
@@ -188,6 +198,11 @@ body {
   text-align: center;
   min-width: 80px;
   -webkit-tap-highlight-color: transparent;
+}
+
+.play-btn {
+  background: hsl(160, 70%, 45%);
+  color: hsl(280, 10%, 98%);
 }
 
 .download-btn {
@@ -428,6 +443,10 @@ input[type="file"] {
 
   .file-name a:hover {
     color: hsl(210, 100%, 65%);
+  }
+
+  .play-btn:hover {
+    background: hsl(160, 70%, 48%);
   }
 
   .download-btn:hover {
