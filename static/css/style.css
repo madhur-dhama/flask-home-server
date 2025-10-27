@@ -133,12 +133,12 @@ body {
 }
 
 .file-icon.video {
-  background: hsl(280, 70%, 55%);
+  background: hsl(210, 80%, 55%);
   color: hsl(280, 10%, 98%);
 }
 
 .file-icon.audio {
-  background: hsl(280, 70%, 55%);
+  background: hsl(210, 80%, 55%);
   color: hsl(160, 10%, 98%);
 }
 
