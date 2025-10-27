@@ -518,17 +518,14 @@ input[type="file"] {
   padding: 6px 10px;
   border-radius: 5px;
   text-decoration: none;
-  color: #007bff;
-  transition: background 0.2s;
+  color: white;
 }
 
 .pagination-number:hover {
-  background-color: #007bff;
-  color: white;
+  color: #007bff;
 }
 
 .pagination-number.active {
   font-weight: bold;
-  background-color: #007bff;
-  color: white;
+  color: #007bff;
 }
