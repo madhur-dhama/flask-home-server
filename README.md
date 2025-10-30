@@ -10,7 +10,7 @@ Works entirely **offline** on your **local Wi-Fi**, perfect for quick file shari
 
 - 📂 **Browse files & folders**
 - ⬆️ **Upload multiple files**
-- ⬇️ **Download**
+- ⬇️ **Download multiple files**
 - 🎵 **Stream audio files**
 - 🎬 **Stream video files** 
 - 🎮 **Built-in media player**
@@ -40,14 +40,14 @@ cd flask-home-server
 
 ### 2. Install dependencies
 ```bash
-python -m venv venv
-source venv/bin/activate
+python3 -m venv ~/ve_flask
+source ~/ve_flask/bin/activate
 pip install flask
 ```
 
 ### 3. Run the server 
 ```bash
-python app.py
+python3 app.py
 ```
 
 ### 4. Access it on your phone or another device
@@ -56,19 +56,19 @@ Open in your browser:
 http://<your-ip>:8000
 ```
 
-**Examples:** - `http://192.168.0.51:8000`
+**Example:** - `http://192.168.0.51:8000`
 
 **To find your IP address:**
 ```bash
-hostname -i
+ip a | grep 'inet '
 ```
 
 ---
 
 ## ▶️ Quick Start (next time)
 ```bash
-source venv/bin/activate
-python app.py
+source ~/ve_flask/bin/activate
+python3 app.py
 ```
 
 ---
