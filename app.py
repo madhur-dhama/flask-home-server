@@ -9,7 +9,7 @@ import os
 import logging
 import tempfile
 import werkzeug
-from flask import (Flask, render_template, send_from_directory, request, redirect, url_for, flash)
+from flask import (Flask, render_template, send_from_directory, request, redirect, url_for)
 from werkzeug.utils import secure_filename
 
 from config import SHARED_DIR, TEMP_DIR, HOST, PORT, MAX_CONTENT_LENGTH, SECRET_KEY
@@ -80,13 +80,11 @@ def play(filepath):
     """Play audio or video in browser"""
     full_path = get_safe_path(filepath)
     if not os.path.exists(full_path):
-        flash('File not found')
         return redirect(url_for('browse'))
 
     filename = os.path.basename(full_path)
     media_type = get_media_type(filename)
     if not media_type:
-        flash('Unsupported media format')
         return redirect(url_for('browse'))
 
     return render_template(
@@ -106,16 +104,12 @@ def upload():
 
         free_space = get_free_space()
         if free_space <= 0:
-            flash('Storage is full! Cannot upload files.')
             return redirect(f'/browse/{current_path}' if current_path else '/')
 
         if request.content_length and request.content_length > free_space:
-            flash(f'Not enough storage! Available: {human_size(free_space)}, '
-                  f'Upload size: {human_size(request.content_length)}')
             return redirect(f'/browse/{current_path}' if current_path else '/')
 
         if 'files' not in request.files:
-            flash('No files selected')
             return redirect(f'/browse/{current_path}' if current_path else '/')
 
         files = request.files.getlist('files')
@@ -138,16 +132,9 @@ def upload():
             file.save(dest)
             uploaded.append(filename)
 
-        if uploaded:
-            msg = f'Uploaded: {uploaded[0]}' if len(uploaded) == 1 else f'Uploaded {len(uploaded)} files'
-            flash(msg)
-        else:
-            flash('No files were uploaded')
-
         return redirect(f'/browse/{current_path}' if current_path else '/')
     except Exception as e:
         logger.exception("Upload error")
-        flash(f'Upload error: {e}')
         current_path = request.form.get('current_path', '')
         return redirect(f'/browse/{current_path}' if current_path else '/')
 
