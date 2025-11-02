@@ -6,9 +6,6 @@ import pathlib
 import datetime
 from config import SHARED_DIR, MAX_CONTENT_LENGTH
 
-AUDIO_EXTS = {'.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac', '.opus'}
-VIDEO_EXTS = {'.mp4', '.webm', '.ogv', '.mkv', '.avi', '.mov', '.m4v'}
-
 def human_size(n):
     """Convert bytes to human-readable format"""
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
@@ -16,15 +13,6 @@ def human_size(n):
             return f"{n:3.1f} {unit}"
         n /= 1024.0
     return f"{n:.1f} PB"
-
-def get_media_type(filename):
-    """Return 'audio', 'video', or None based on extension"""
-    ext = os.path.splitext(filename)[1].lower()
-    if ext in AUDIO_EXTS:
-        return 'audio'
-    if ext in VIDEO_EXTS:
-        return 'video'
-    return None
 
 def get_safe_path(subpath=''):
     """Prevent directory traversal and return safe path"""
@@ -39,17 +27,13 @@ def list_files(current_path):
     """List files and folders with metadata"""
     p = pathlib.Path(current_path)
     items = []
-
     for entry in sorted(p.iterdir(), key=lambda x: (x.is_file(), x.name.lower())):
         stat = entry.stat()
         rel_path = os.path.relpath(entry, SHARED_DIR)
-        media_type = get_media_type(entry.name) if entry.is_file() else None
-
         items.append({
             'name': entry.name,
             'path': rel_path,
             'is_file': entry.is_file(),
-            'media_type': media_type,
             'size': human_size(stat.st_size) if entry.is_file() else '',
             'mtime': datetime.datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
         })
@@ -60,7 +44,6 @@ def get_breadcrumbs(current_path):
     rel_path = os.path.relpath(current_path, SHARED_DIR)
     if rel_path == '.':
         return []
-
     breadcrumbs = []
     cumulative = ''
     for part in rel_path.split(os.sep):

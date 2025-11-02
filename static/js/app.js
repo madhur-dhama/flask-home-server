@@ -1,8 +1,6 @@
 // Simple File Browser JS 
 const form = document.getElementById('uploadForm');
 const fileInput = document.getElementById('fileInput');
-const selectedFile = document.getElementById('selectedFile');
-const selectedFileName = document.getElementById('selectedFileName');
 const progressContainer = document.getElementById('progressContainer');
 const progressBar = document.getElementById('progressBar');
 const progressLabel = document.getElementById('progressLabel');
@@ -102,6 +100,33 @@ form.onsubmit = e => {
   e.preventDefault();
 };
 
+// Delete file function
+function deleteFile(filepath, filename) {
+  if (!confirm(`Delete "${filename}"?\n\nThis cannot be undone.`)) {
+    return;
+  }
+
+  fetch('/delete/' + filepath, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Show success and reload
+      alert('✓ File deleted successfully');
+      location.reload();
+    } else {
+      alert('❌ Delete failed: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(error => {
+    alert('❌ Delete failed: ' + error.message);
+  });
+}
+
 // Utils
 function formatBytes(b) {
   if (!b) return '0 B';
@@ -120,7 +145,6 @@ function resetForm() {
   progressContainer.classList.remove('show');
   fileInput.disabled = false;
   fileInput.value = '';
-  selectedFile.classList.remove('show');
   progressBar.style.width = '0';
   progressPercent.textContent = '0%';
   progressTime.textContent = 'Calculating...';

@@ -1,109 +1,144 @@
-<!-- index.html -->
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>File Share</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>Files</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>File Share</h1>
-      <div class="meta">
-        <span>{{count}} items</span>
-        <span>{{ storage_left }} left</span>
-      </div>
+  
+  <!-- Header -->
+  <header class="header">
+    <h1>Files</h1>
+    <div class="stats">
+      <span>{{ storage_left }}</span>
+      <span class="dot">•</span>
+      <span>{{count}}</span>
     </div>
+  </header>
 
-    {% if breadcrumbs %}
-    <div class="breadcrumbs">
-      <a href="/" class="breadcrumb-item"><i class="fas fa-home"></i> Home</a>
-      {% for crumb in breadcrumbs %}
-        <span class="breadcrumb-sep">/</span>
-        <a href="/browse/{{ crumb.path | urlencode }}" class="breadcrumb-item">{{ crumb.name }}</a>
-      {% endfor %}
+  <!-- Upload -->
+  <div class="upload">
+    <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="current_path" value="{{ current_subpath }}">
+      <label for="fileInput">
+        <i class="fa-solid fa-plus"></i>
+        Upload
+      </label>
+      <input type="file" name="files" id="fileInput" multiple>
+    </form>
+
+    <div id="progressContainer" class="progress">
+      <div class="progress-info">
+        <span id="progressLabel">...</span>
+        <span id="progressPercent">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div id="progressBar"></div>
+      </div>
+      <small id="progressTime">...</small>
     </div>
+  </div>
+
+  <!-- Path -->
+  {% if breadcrumbs %}
+  <nav class="path">
+    <a href="/"><i class="fa-regular fa-home"></i>Home</a>
+    {% for crumb in breadcrumbs %}
+      <span>/</span>
+      <a href="/browse/{{ crumb.path | urlencode }}">{{ crumb.name }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  <!-- Files -->
+  <main class="grid">
+    {% if files %}
+      {% for f in files %}
+        <div class="card{% if not f.is_file %} folder{% endif %}" 
+             {% if not f.is_file %}onclick="location.href='/browse/{{ f.path | urlencode }}'"{% endif %}>
+          
+          <div class="icon">
+            {% if f.is_file %}
+              {% set ext = f.name.split('.')[-1].lower() %}
+              {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'] %}
+                <i class="fa-regular fa-image"></i>
+              {% elif ext in ['pdf'] %}
+                <i class="fa-regular fa-file-pdf"></i>
+              {% elif ext in ['doc', 'docx'] %}
+                <i class="fa-regular fa-file-word"></i>
+              {% elif ext in ['xls', 'xlsx'] %}
+                <i class="fa-regular fa-file-excel"></i>
+              {% elif ext in ['zip', 'rar', '7z', 'tar', 'gz'] %}
+                <i class="fa-regular fa-file-zipper"></i>
+              {% elif ext in ['mp4', 'mkv', 'avi', 'mov'] %}
+                <i class="fa-regular fa-file-video"></i>
+              {% elif ext in ['mp3', 'wav', 'flac', 'ogg'] %}
+                <i class="fa-regular fa-file-audio"></i>
+              {% elif ext in ['py', 'js', 'html', 'css', 'java', 'json'] %}
+                <i class="fa-regular fa-file-code"></i>
+              {% else %}
+                <i class="fa-regular fa-file"></i>
+              {% endif %}
+            {% else %}
+              <i class="fa-regular fa-folder"></i>
+            {% endif %}
+          </div>
+
+          <div class="name" title="{{ f.name }}">{{ f.name }}</div>
+          
+          {% if f.size %}
+            <div class="size">{{ f.size }}</div>
+          {% endif %}
+
+          {% if f.is_file %}
+          <div class="actions">
+            <a href="/download/{{ f.path | urlencode }}">
+              <i class="fa-solid fa-download"></i>
+            </a>
+            <button onclick="event.stopPropagation(); deleteFile('{{ f.path | urlencode }}', '{{ f.name }}')">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">
+        <i class="fa-regular fa-folder-open"></i>
+        <p>Empty</p>
+      </div>
+    {% endif %}
+  </main>
+
+  <!-- Pages -->
+  {% if total_pages > 1 %}
+  <nav class="pages">
+    {% if page > 1 %}
+      <a href="{{ url_for('browse', subpath=current_subpath, page=page-1) }}">
+        <i class="fa-solid fa-chevron-left"></i>
+      </a>
     {% endif %}
 
-    <div class="file-list">
-      {% if files %}
-        {% for f in files %}
-          <div class="file-item">
-            <div class="file-icon {% if f.is_file %}{% if f.media_type == 'video' %}video{% elif f.media_type == 'audio' %}audio{% else %}doc{% endif %}{% else %}folder{% endif %}" {% if not f.is_file %}onclick="location.href='/browse/{{ f.path | urlencode }}'"{% endif %}>
-              {% if f.is_file %}
-                {% if f.media_type == 'video' %}<i class="fas fa-video"></i>{% elif f.media_type == 'audio' %}<i class="fas fa-music"></i>{% else %}<i class="fas fa-file"></i>{% endif %}
-              {% else %}
-                <i class="fas fa-folder"></i>
-              {% endif %}
-            </div>
-            <div class="file-info">
-              <div class="file-name">
-                {% if f.is_file %}{{ f.name }}{% else %}<a href="/browse/{{ f.path | urlencode }}">{{ f.name }}</a>{% endif %}
-              </div>
-              <div class="file-meta">
-                {% if f.size %}
-                  <span class="file-size">{{ f.size }}</span>
-                {% else %}
-                  <span class="file-size">Folder</span>
-                {% endif %}
-              </div>
-            </div>
-            <div class="file-actions">
-              {% if f.is_file %}
-                {% if f.media_type %}
-                  <a class="action-btn play-btn" href="/play/{{ f.path | urlencode }}">Play</a>
-                {% endif %}
-                <a class="action-btn download-btn" href="/download/{{ f.path | urlencode }}">Download</a>
-              {% endif %}
-            </div>
-          </div>
-        {% endfor %}
-      {% else %}
-        <div class="empty-state">
-          <div class="empty-state-icon">📭</div>
-          <div>This folder is empty</div>
-        </div>
-      {% endif %}
-    </div>
-
- {% if total_pages > 1 %}
-  <div class="pagination">
     {% for p in range(1, total_pages + 1) %}
       {% if p == page %}
-        <span class="pagination-number active">{{ p }}</span>
-      {% else %}
-        <a class="pagination-number" href="{{ url_for('browse', subpath=current_subpath, page=p) }}">{{ p }}</a>
+        <span class="current">{{ p }}</span>
+      {% elif p == 1 or p == total_pages or (p >= page - 1 and p <= page + 1) %}
+        <a href="{{ url_for('browse', subpath=current_subpath, page=p) }}">{{ p }}</a>
+      {% elif p == page - 2 or p == page + 2 %}
+        <span>···</span>
       {% endif %}
     {% endfor %}
-  </div>
-{% endif %}
 
-<div class="action-section">
-  <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
-    <input type="hidden" name="current_path" value="{{ current_subpath }}">
-    <div class="upload-area">
-      <label for="fileInput">
-        <span class="upload-icon">☁️</span>
-        <span class="upload-text">Upload Files</span>
-      </label>
-      <input type="file" name="files" id="fileInput" multiple required>
-    </div>
-  </form>
-
-  <div id="progressContainer" class="progress-container">
-    <div class="progress-label" id="progressLabel">Uploading...</div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" id="progressBar" style="width:0"></div>
-    </div>
-    <div class="progress-stats">
-      <span id="progressPercent">0%</span>
-      <span id="progressTime">Calculating...</span>
-    </div>
-  </div>
-</div>
+    {% if page < total_pages %}
+      <a href="{{ url_for('browse', subpath=current_subpath, page=page+1) }}">
+        <i class="fa-solid fa-chevron-right"></i>
+      </a>
+    {% endif %}
+  </nav>
+  {% endif %}
 
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>

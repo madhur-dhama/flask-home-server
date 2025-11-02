@@ -9,11 +9,11 @@ import os
 import logging
 import tempfile
 import werkzeug
-from flask import (Flask, render_template, send_from_directory, request, redirect, url_for)
+from flask import (Flask, render_template, send_from_directory, request, redirect, url_for, jsonify)
 from werkzeug.utils import secure_filename
 
 from config import SHARED_DIR, TEMP_DIR, HOST, PORT, MAX_CONTENT_LENGTH, SECRET_KEY
-from utils import (human_size, get_safe_path, list_files, get_breadcrumbs, get_directory_size, get_free_space, get_media_type)
+from utils import (human_size, get_safe_path, list_files, get_breadcrumbs, get_directory_size, get_free_space)
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -67,32 +67,25 @@ def download(filepath):
     filename = os.path.basename(full_path)
     return send_from_directory(directory, filename, as_attachment=True)
 
-@app.route('/stream/<path:filepath>')
-def stream(filepath):
-    """Stream file inline"""
-    full_path = get_safe_path(filepath)
-    directory = os.path.dirname(full_path)
-    filename = os.path.basename(full_path)
-    return send_from_directory(directory, filename, as_attachment=False)
-
-@app.route('/play/<path:filepath>')
-def play(filepath):
-    """Play audio or video in browser"""
-    full_path = get_safe_path(filepath)
-    if not os.path.exists(full_path):
-        return redirect(url_for('browse'))
-
-    filename = os.path.basename(full_path)
-    media_type = get_media_type(filename)
-    if not media_type:
-        return redirect(url_for('browse'))
-
-    return render_template(
-        'player.html',
-        filepath=filepath,
-        filename=filename,
-        media_type=media_type
-    )
+@app.route('/delete/<path:filepath>', methods=['POST'])
+def delete(filepath):
+    """Delete file"""
+    try:
+        full_path = get_safe_path(filepath)
+        
+        if not os.path.exists(full_path):
+            return jsonify({'success': False, 'error': 'File not found'}), 404
+        
+        if os.path.isfile(full_path):
+            os.remove(full_path)
+            logger.info(f"Deleted file: {filepath}")
+            return jsonify({'success': True, 'message': 'File deleted successfully'})
+        else:
+            return jsonify({'success': False, 'error': 'Cannot delete folders'}), 400
+            
+    except Exception as e:
+        logger.exception("Delete error")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/upload', methods=['POST'])
 def upload():
