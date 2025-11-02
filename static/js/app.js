@@ -1,7 +1,6 @@
-// Simple File Browser JS - No Delete/Create Folder
+// Simple File Browser JS 
 const form = document.getElementById('uploadForm');
 const fileInput = document.getElementById('fileInput');
-const uploadBtn = document.getElementById('uploadBtn');
 const selectedFile = document.getElementById('selectedFile');
 const selectedFileName = document.getElementById('selectedFileName');
 const progressContainer = document.getElementById('progressContainer');
@@ -9,32 +8,20 @@ const progressBar = document.getElementById('progressBar');
 const progressLabel = document.getElementById('progressLabel');
 const progressPercent = document.getElementById('progressPercent');
 const progressTime = document.getElementById('progressTime');
-const removeFile = document.getElementById('removeFile');
 
 let uploadStart = null;
 
-// File selection
+// File selection - Auto-upload
 fileInput.onchange = () => {
   const files = fileInput.files;
   if (!files.length) return;
   
-  let size = 0;
-  for (let f of files) size += f.size;
-  
-  selectedFileName.textContent = files.length === 1 
-    ? `${files[0].name} (${formatBytes(size)})`
-    : `${files.length} files (${formatBytes(size)})`;
-  selectedFile.classList.add('show');
+  // Auto-upload immediately after selection
+  uploadFiles();
 };
 
-removeFile.onclick = () => {
-  fileInput.value = '';
-  selectedFile.classList.remove('show');
-};
-
-// Upload
-form.onsubmit = e => {
-  e.preventDefault();
+// Upload function
+function uploadFiles() {
   const files = fileInput.files;
   if (!files.length) return;
 
@@ -45,13 +32,13 @@ form.onsubmit = e => {
     totalSize += f.size;
     if (f.size > max) {
       alert(`❌ "${f.name}" is too large! Max 100GB per file`);
+      resetForm();
       return;
     }
   }
 
   const formData = new FormData(form);
   progressContainer.classList.add('show');
-  uploadBtn.disabled = true;
   fileInput.disabled = true;
   uploadStart = Date.now();
 
@@ -89,6 +76,7 @@ form.onsubmit = e => {
         progressBar.style.width = '100%';
         progressPercent.textContent = '100%';
         progressTime.textContent = 'Done!';
+        // Auto-refresh after successful upload
         setTimeout(() => location.reload(), 800);
       }
     } else if (xhr.status === 302) {
@@ -107,6 +95,11 @@ form.onsubmit = e => {
 
   xhr.open('POST', '/upload');
   xhr.send(formData);
+}
+
+// Prevent manual form submission
+form.onsubmit = e => {
+  e.preventDefault();
 };
 
 // Utils
@@ -125,7 +118,6 @@ function formatTime(s) {
 
 function resetForm() {
   progressContainer.classList.remove('show');
-  uploadBtn.disabled = false;
   fileInput.disabled = false;
   fileInput.value = '';
   selectedFile.classList.remove('show');

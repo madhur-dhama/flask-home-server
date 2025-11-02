@@ -20,9 +20,9 @@
 
     {% if breadcrumbs %}
     <div class="breadcrumbs">
-      <a href="/" class="breadcrumb-item">🏠Home</a>
+      <a href="/" class="breadcrumb-item"><i class="fas fa-home"></i> Home</a>
       {% for crumb in breadcrumbs %}
-        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-sep">/</span>
         <a href="/browse/{{ crumb.path | urlencode }}" class="breadcrumb-item">{{ crumb.name }}</a>
       {% endfor %}
     </div>
@@ -81,42 +81,29 @@
   </div>
 {% endif %}
 
-    <div class="action-section">
-      <div class="action-title">Upload Files</div>
-      <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="current_path" value="{{ current_subpath }}">
-        <div class="upload-area">
-          <label for="fileInput">
-            <div class="upload-icon">☁️</div>
-            <div class="upload-text">Tap to select files</div>
-            <div class="upload-hint">Max 100GB • Multiple files</div>
-          </label>
-          <input type="file" name="files" id="fileInput" multiple required>
-        </div>
-        
-        <div class="selected-file" id="selectedFile">
-          <span class="selected-file-name" id="selectedFileName"></span>
-          <button type="button" class="remove-file" id="removeFile">✕</button>
-        </div>
+<div class="action-section">
+  <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="current_path" value="{{ current_subpath }}">
+    <div class="upload-area">
+      <label for="fileInput">
+        <span class="upload-icon">☁️</span>
+        <span class="upload-text">Upload Files</span>
+      </label>
+      <input type="file" name="files" id="fileInput" multiple required>
+    </div>
+  </form>
 
-        <div class="btn-group">
-          <button type="submit" class="btn btn-primary" id="uploadBtn">Upload</button>
-          <button type="button" class="btn btn-secondary" onclick="location.reload()">Refresh</button>
-        </div>
-      </form>
-
-      <div id="progressContainer" class="progress-container">
-        <div class="progress-label" id="progressLabel">Uploading...</div>
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="progressBar" style="width:0"></div>
-        </div>
-        <div class="progress-stats">
-          <span id="progressPercent">0%</span>
-          <span id="progressTime">Calculating...</span>
-        </div>
-      </div>
+  <div id="progressContainer" class="progress-container">
+    <div class="progress-label" id="progressLabel">Uploading...</div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar" style="width:0"></div>
+    </div>
+    <div class="progress-stats">
+      <span id="progressPercent">0%</span>
+      <span id="progressTime">Calculating...</span>
     </div>
   </div>
+</div>
 
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
