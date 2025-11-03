@@ -9,11 +9,11 @@ import os
 import logging
 import tempfile
 import werkzeug
-from flask import (Flask, render_template, send_from_directory, request, redirect, url_for, jsonify)
+from flask import (Flask, render_template, send_from_directory, request, jsonify)
 from werkzeug.utils import secure_filename
 
-from config import SHARED_DIR, TEMP_DIR, HOST, PORT, MAX_CONTENT_LENGTH, SECRET_KEY
-from utils import (human_size, get_safe_path, list_files, get_breadcrumbs, get_directory_size, get_free_space)
+from config import (SHARED_DIR, TEMP_DIR, HOST, PORT, MAX_CONTENT_LENGTH, SECRET_KEY)
+from utils import (human_size, get_safe_path, list_files, get_breadcrumbs, get_free_space)
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -27,7 +27,6 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 app.secret_key = SECRET_KEY
 
-# Increase Werkzeug limits for large file uploads
 werkzeug.serving.WSGIRequestHandler.protocol_version = "HTTP/1.1"
 
 @app.route('/')
@@ -37,35 +36,32 @@ def browse(subpath=''):
     """List files and directories"""
     current_path = get_safe_path(subpath)
     files = list_files(current_path)
-    breadcrumbs = get_breadcrumbs(current_path)
-    storage_left = human_size(get_free_space())
     
     # Pagination
     page = request.args.get('page', 1, type=int)
     per_page = 50
-    total_files = len(files)
-    total_pages = (total_files + per_page - 1) // per_page
-    start, end = (page - 1) * per_page, (page - 1) * per_page + per_page
-    files_paginated = files[start:end]
-
+    start = (page - 1) * per_page
+    
     return render_template(
         'index.html',
-        files=files_paginated,
-        count=total_files,
-        breadcrumbs=breadcrumbs,
+        files=files[start:start + per_page],
+        count=len(files),
+        breadcrumbs=get_breadcrumbs(current_path),
         current_subpath=subpath,
-        storage_left=storage_left,
+        storage_left=human_size(get_free_space()),
         page=page,
-        total_pages=total_pages
+        total_pages=(len(files) + per_page - 1) // per_page
     )
 
 @app.route('/download/<path:filepath>')
 def download(filepath):
     """Download file"""
     full_path = get_safe_path(filepath)
-    directory = os.path.dirname(full_path)
-    filename = os.path.basename(full_path)
-    return send_from_directory(directory, filename, as_attachment=True)
+    return send_from_directory(
+        os.path.dirname(full_path),
+        os.path.basename(full_path),
+        as_attachment=True
+    )
 
 @app.route('/delete/<path:filepath>', methods=['POST'])
 def delete(filepath):
@@ -74,43 +70,45 @@ def delete(filepath):
         full_path = get_safe_path(filepath)
         
         if not os.path.exists(full_path):
-            return jsonify({'success': False, 'error': 'File not found'}), 404
+            logger.warning(f"Delete failed - not found: {filepath}")
+            return jsonify({'success': False}), 404
         
-        if os.path.isfile(full_path):
-            os.remove(full_path)
-            logger.info(f"Deleted file: {filepath}")
-            return jsonify({'success': True, 'message': 'File deleted successfully'})
-        else:
-            return jsonify({'success': False, 'error': 'Cannot delete folders'}), 400
+        if not os.path.isfile(full_path):
+            logger.warning(f"Delete failed - is folder: {filepath}")
+            return jsonify({'success': False}), 400
+        
+        os.remove(full_path)
+        logger.info(f"Deleted: {filepath}")
+        return jsonify({'success': True})
             
     except Exception as e:
-        logger.exception("Delete error")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        logger.exception(f"Delete error: {filepath}")
+        return jsonify({'success': False}), 500
 
 @app.route('/upload', methods=['POST'])
 def upload():
     """Handle uploads"""
     try:
-        logger.info(f"Upload request received. Content-Length: {request.content_length}")
-        current_path = request.form.get('current_path', '')
-        upload_dir = get_safe_path(current_path)
-
-        free_space = get_free_space()
-        if free_space <= 0:
-            return redirect(f'/browse/{current_path}' if current_path else '/')
-
-        if request.content_length and request.content_length > free_space:
-            return redirect(f'/browse/{current_path}' if current_path else '/')
-
         if 'files' not in request.files:
-            return redirect(f'/browse/{current_path}' if current_path else '/')
+            logger.warning("Upload failed - no files in request")
+            return jsonify({'error': 'No files'}), 400
 
         files = request.files.getlist('files')
-        uploaded = []
+        upload_dir = get_safe_path(request.form.get('current_path', ''))
+        
+        # Check storage - only error shown to user
+        free_space = get_free_space()
+        if free_space <= 0 or (request.content_length and 
+                               request.content_length > free_space):
+            logger.warning(f"Upload failed - storage full (free: {human_size(free_space)})")
+            return jsonify({'error': 'Storage full'}), 507
 
+        # Save files
+        uploaded = 0
         for file in files:
             if not file.filename:
                 continue
+                
             filename = secure_filename(file.filename)
             dest = os.path.join(upload_dir, filename)
 
@@ -121,18 +119,18 @@ def upload():
                 dest = f"{base}_{counter}{ext}"
                 counter += 1
 
-            logger.info(f"Saving: {filename} -> {dest}")
             file.save(dest)
-            uploaded.append(filename)
+            uploaded += 1
+            logger.info(f"Saved: {filename}")
 
-        return redirect(f'/browse/{current_path}' if current_path else '/')
+        return jsonify({'success': True, 'count': uploaded})
+
     except Exception as e:
         logger.exception("Upload error")
-        current_path = request.form.get('current_path', '')
-        return redirect(f'/browse/{current_path}' if current_path else '/')
+        return jsonify({'error': 'Upload failed'}), 500
 
 if __name__ == '__main__':
-    logger.info(f"Serving folder: {SHARED_DIR}")
-    logger.info(f"Open on phone: http://<your-ip>:{PORT}")
-    logger.info(f"Max upload size: {human_size(MAX_CONTENT_LENGTH)}")
+    logger.info(f"Serving: {SHARED_DIR}")
+    logger.info(f"Access: http://<your-ip>:{PORT}")
+    logger.info(f"Max upload: {human_size(MAX_CONTENT_LENGTH)}")
     app.run(host=HOST, port=PORT, threaded=True, debug=False)
