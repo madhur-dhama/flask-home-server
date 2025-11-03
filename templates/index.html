@@ -2,50 +2,40 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Files</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
   
-  <!-- Header -->
-  <header class="header">
+  <header>
     <h1>Files</h1>
-    <div class="stats">
-      <span>{{ storage_left }}</span>
-      <span class="dot">•</span>
-      <span>{{count}}</span>
-    </div>
+    <div class="stats">{{ storage_left }} • {{count}}</div>
   </header>
 
-  <!-- Upload -->
   <div class="upload">
-    <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+    <form id="uploadForm" enctype="multipart/form-data">
       <input type="hidden" name="current_path" value="{{ current_subpath }}">
       <label for="fileInput">
-        <i class="fa-solid fa-plus"></i>
-        Upload
+        <i class="fa-solid fa-plus"></i> Upload
       </label>
       <input type="file" name="files" id="fileInput" multiple>
     </form>
 
     <div id="progressContainer" class="progress">
-      <div class="progress-info">
+      <div class="info">
         <span id="progressLabel">...</span>
         <span id="progressPercent">0%</span>
       </div>
-      <div class="progress-bar">
-        <div id="progressBar"></div>
-      </div>
-      <small id="progressTime">--</small>
+      <div class="bar"><div id="progressBar"></div></div>
+      <small id="progressTime"></small>
     </div>
   </div>
 
-  <!-- Path -->
   {% if breadcrumbs %}
   <nav class="path">
-    <a href="/"><i class="fa-regular fa-home"></i>Home</a>
+    <a href="/"><i class="fa-regular fa-home"></i> Home</a>
     {% for crumb in breadcrumbs %}
       <span>/</span>
       <a href="/browse/{{ crumb.path | urlencode }}">{{ crumb.name }}</a>
@@ -53,51 +43,29 @@
   </nav>
   {% endif %}
 
-  <!-- Files -->
-  <main class="grid">
+  <main>
     {% if files %}
       {% for f in files %}
         <div class="card{% if not f.is_file %} folder{% endif %}" 
              {% if not f.is_file %}onclick="location.href='/browse/{{ f.path | urlencode }}'"{% endif %}>
           
-          <div class="icon">
-            {% if f.is_file %}
-              {% set ext = f.name.split('.')[-1].lower() %}
-              {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'] %}
-                <i class="fa-regular fa-image"></i>
-              {% elif ext in ['pdf'] %}
-                <i class="fa-regular fa-file-pdf"></i>
-              {% elif ext in ['doc', 'docx'] %}
-                <i class="fa-regular fa-file-word"></i>
-              {% elif ext in ['xls', 'xlsx'] %}
-                <i class="fa-regular fa-file-excel"></i>
-              {% elif ext in ['zip', 'rar', '7z', 'tar', 'gz'] %}
-                <i class="fa-regular fa-file-zipper"></i>
-              {% elif ext in ['mp4', 'mkv', 'avi', 'mov'] %}
-                <i class="fa-regular fa-file-video"></i>
-              {% elif ext in ['mp3', 'wav', 'flac', 'ogg'] %}
-                <i class="fa-regular fa-file-audio"></i>
-              {% elif ext in ['py', 'js', 'html', 'css', 'java', 'json'] %}
-                <i class="fa-regular fa-file-code"></i>
-              {% else %}
-                <i class="fa-regular fa-file"></i>
-              {% endif %}
-            {% else %}
-              <i class="fa-regular fa-folder"></i>
-            {% endif %}
-          </div>
+          <i class="{% if f.is_file %}
+            {% set ext = f.name.split('.')[-1].lower() %}
+            {% if ext in ['jpg','jpeg','png','gif','webp','svg'] %}fa-regular fa-image
+            {% elif ext in ['pdf'] %}fa-regular fa-file-pdf
+            {% elif ext in ['mp4','mkv','avi','mov'] %}fa-regular fa-file-video
+            {% elif ext in ['mp3','wav','flac'] %}fa-regular fa-file-audio
+            {% elif ext in ['zip','rar','7z','tar','gz'] %}fa-regular fa-file-zipper
+            {% elif ext in ['py','js','html','css'] %}fa-regular fa-file-code
+            {% else %}fa-regular fa-file{% endif %}
+          {% else %}fa-regular fa-folder{% endif %}"></i>
 
-          <div class="name" title="{{ f.name }}">{{ f.name }}</div>
-          
-          {% if f.size %}
-            <div class="size">{{ f.size }}</div>
-          {% endif %}
+          <div class="name">{{ f.name }}</div>
+          {% if f.size %}<div class="size">{{ f.size }}</div>{% endif %}
 
           {% if f.is_file %}
           <div class="actions">
-            <a href="/download/{{ f.path | urlencode }}">
-              <i class="fa-solid fa-download"></i>
-            </a>
+            <a href="/download/{{ f.path | urlencode }}"><i class="fa-solid fa-download"></i></a>
             <button onclick="event.stopPropagation(); deleteFile('{{ f.path | urlencode }}', '{{ f.name }}')">
               <i class="fa-solid fa-trash"></i>
             </button>
@@ -113,29 +81,22 @@
     {% endif %}
   </main>
 
-  <!-- Pages -->
   {% if total_pages > 1 %}
   <nav class="pages">
     {% if page > 1 %}
-      <a href="{{ url_for('browse', subpath=current_subpath, page=page-1) }}">
-        <i class="fa-solid fa-chevron-left"></i>
-      </a>
+      <a href="{{ url_for('browse', subpath=current_subpath, page=page-1) }}">‹</a>
     {% endif %}
-
     {% for p in range(1, total_pages + 1) %}
       {% if p == page %}
         <span class="current">{{ p }}</span>
       {% elif p == 1 or p == total_pages or (p >= page - 1 and p <= page + 1) %}
         <a href="{{ url_for('browse', subpath=current_subpath, page=p) }}">{{ p }}</a>
       {% elif p == page - 2 or p == page + 2 %}
-        <span>···</span>
+        <span>…</span>
       {% endif %}
     {% endfor %}
-
     {% if page < total_pages %}
-      <a href="{{ url_for('browse', subpath=current_subpath, page=page+1) }}">
-        <i class="fa-solid fa-chevron-right"></i>
-      </a>
+      <a href="{{ url_for('browse', subpath=current_subpath, page=page+1) }}">›</a>
     {% endif %}
   </nav>
   {% endif %}
