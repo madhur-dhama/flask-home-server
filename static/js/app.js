@@ -5,7 +5,6 @@ const progressContainer = document.getElementById('progressContainer');
 const progressBar = document.getElementById('progressBar');
 const progressLabel = document.getElementById('progressLabel');
 const progressPercent = document.getElementById('progressPercent');
-const progressTime = document.getElementById('progressTime');
 
 let uploadStart = null;
 
@@ -14,80 +13,82 @@ fileInput.onchange = () => {
   if (fileInput.files.length) uploadFiles();
 };
 
-// Upload function
-function uploadFiles() {
-  const files = fileInput.files;
+// Upload files
+async function uploadFiles() {
+  const files = Array.from(fileInput.files);
   if (!files.length) return;
 
-  const formData = new FormData(form);
   progressContainer.classList.add('show');
   fileInput.disabled = true;
   uploadStart = Date.now();
 
-  const xhr = new XMLHttpRequest();
+  let totalSize = files.reduce((sum, f) => sum + f.size, 0);
+  let uploadedSize = 0;
 
-  xhr.upload.onprogress = e => {
-    if (!e.lengthComputable) return;
-    
-    const pct = Math.round((e.loaded / e.total) * 100);
-    progressBar.style.width = pct + '%';
-    progressPercent.textContent = pct + '%';
-    progressLabel.textContent = files.length === 1 ? files[0].name : `${files.length} files`;
-    
-    const elapsed = (Date.now() - uploadStart) / 1000;
-    if (elapsed > 1) {
-      const speed = e.loaded / elapsed;
-      const timeLeft = (e.total - e.loaded) / speed;
-      progressTime.textContent = formatTime(timeLeft) + ' left';
-    }
-  };
+  for (let i = 0; i < files.length; i++) {
+    const formData = new FormData();
+    formData.append('files', files[i]);
+    formData.append('current_path', form.querySelector('[name="current_path"]').value);
 
-  xhr.onload = () => {
-    if (xhr.status === 200) {
-      progressLabel.textContent = '✓ Complete!';
-      progressBar.style.width = '100%';
-      progressPercent.textContent = '100%';
-      progressTime.textContent = 'Done!';
-      setTimeout(() => location.reload(), 800);
-    } else if (xhr.status === 507) {
-      // Storage full - only error we show to user
-      alert('❌ Storage full');
-      resetForm();
-    } else {
-      // Other errors - just reset, check server logs
-      resetForm();
-    }
-  };
+    const success = await uploadFile(formData, files[i], uploadedSize, totalSize, i + 1, files.length);
+    if (!success) break;
+    uploadedSize += files[i].size;
+  }
 
-  xhr.onerror = () => resetForm();
-
-  xhr.open('POST', '/upload');
-  xhr.send(formData);
+  progressLabel.textContent = 'Complete!';
+  progressBar.style.width = '100%';
+  progressPercent.textContent = '100%';
+  setTimeout(() => location.reload(), 800);
 }
 
-// Prevent manual form submission
-form.onsubmit = e => e.preventDefault();
+// Upload single file
+function uploadFile(formData, file, uploaded, total, num, count) {
+  return new Promise(resolve => {
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.onprogress = e => {
+      if (!e.lengthComputable) return;
+      const pct = Math.round(((uploaded + e.loaded) / total) * 100);
+      progressBar.style.width = pct + '%';
+      progressPercent.textContent = pct + '%';
+      progressLabel.textContent = count === 1 ? file.name : `${num}/${count}: ${file.name}`;
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        resolve(true);
+      } else {
+        if (xhr.status === 507) alert('Storage full');
+        resetForm();
+        resolve(false);
+      }
+    };
+
+    xhr.onerror = () => {
+      resetForm();
+      resolve(false);
+    };
+
+    xhr.open('POST', '/upload');
+    xhr.send(formData);
+  });
+}
 
 // Delete file
 function deleteFile(filepath, filename) {
-  if (!confirm(`Delete "${filename}"?\n\nThis cannot be undone.`)) return;
-  
+  if (!confirm(`Delete "${filename}"?`)) return;
   fetch('/delete/' + filepath, { method: 'POST' })
-    .finally(() => location.reload());  // Always reload, errors logged on server
+    .finally(() => location.reload());
 }
 
-// Utils
-function formatTime(s) {
-  if (s < 60) return Math.round(s) + 's';
-  if (s < 3600) return `${Math.floor(s/60)}m ${Math.round(s%60)}s`;
-  return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
-}
-
+// Reset form
 function resetForm() {
   progressContainer.classList.remove('show');
   fileInput.disabled = false;
   fileInput.value = '';
   progressBar.style.width = '0';
   progressPercent.textContent = '0%';
-  progressTime.textContent = 'Calculating...';
 }
+
+// Prevent form submission
+form.onsubmit = e => e.preventDefault();

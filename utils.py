@@ -4,10 +4,12 @@ Utility functions for the Flask Home Server
 import os
 import pathlib
 import datetime
-from config import SHARED_DIR, MAX_CONTENT_LENGTH
+from config import SHARED_DIR, STORAGE_QUOTA
 
 def human_size(n):
     """Convert bytes to human-readable format"""
+    if n < 0:
+        return "0 B"
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
         if n < 1024.0:
             return f"{n:3.1f} {unit}"
@@ -65,7 +67,7 @@ def get_directory_size(path):
     return total
 
 def get_free_space():
-    """Return remaining space based on MAX_CONTENT_LENGTH"""
+    """Return remaining storage quota"""
     used = get_directory_size(SHARED_DIR)
-    free = MAX_CONTENT_LENGTH - used
+    free = STORAGE_QUOTA - used
     return max(free, 0)

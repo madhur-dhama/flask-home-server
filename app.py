@@ -87,41 +87,42 @@ def delete(filepath):
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    """Handle uploads"""
+    """Handle uploads - reject if quota exceeded"""
     try:
         if 'files' not in request.files:
-            logger.warning("Upload failed - no files in request")
             return jsonify({'error': 'No files'}), 400
 
         files = request.files.getlist('files')
         upload_dir = get_safe_path(request.form.get('current_path', ''))
         
-        # Check storage - only error shown to user
-        free_space = get_free_space()
-        if free_space <= 0 or (request.content_length and 
-                               request.content_length > free_space):
-            logger.warning(f"Upload failed - storage full (free: {human_size(free_space)})")
-            return jsonify({'error': 'Storage full'}), 507
-
-        # Save files
         uploaded = 0
+        
         for file in files:
             if not file.filename:
                 continue
-                
-            filename = secure_filename(file.filename)
-            dest = os.path.join(upload_dir, filename)
-
+            
+            # Check quota
+            file.seek(0, 2)
+            file_size = file.tell()
+            file.seek(0)
+            
+            if file_size > get_free_space():
+                logger.warning(f"Rejected {file.filename} - quota exceeded")
+                continue
+            
             # Handle duplicates
-            base, ext = os.path.splitext(dest)
+            filename = secure_filename(file.filename)
+            base, ext = os.path.splitext(filename)
+            dest = os.path.join(upload_dir, filename)
             counter = 1
             while os.path.exists(dest):
-                dest = f"{base}_{counter}{ext}"
+                dest = os.path.join(upload_dir, f"{base}_{counter}{ext}")
                 counter += 1
 
+            # Save file
             file.save(dest)
             uploaded += 1
-            logger.info(f"Saved: {filename}")
+            logger.info(f"Saved: {os.path.basename(dest)}")
 
         return jsonify({'success': True, 'count': uploaded})
 
