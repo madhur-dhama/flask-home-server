@@ -5,6 +5,7 @@ const progressContainer = document.getElementById('progressContainer');
 const progressBar = document.getElementById('progressBar');
 const progressLabel = document.getElementById('progressLabel');
 const progressPercent = document.getElementById('progressPercent');
+const progressTime = document.getElementById('progressTime');
 
 let uploadStart = null;
 
@@ -38,6 +39,7 @@ async function uploadFiles() {
   progressLabel.textContent = 'Complete!';
   progressBar.style.width = '100%';
   progressPercent.textContent = '100%';
+  progressTime.textContent = 'Done!';
   setTimeout(() => location.reload(), 800);
 }
 
@@ -48,10 +50,19 @@ function uploadFile(formData, file, uploaded, total, num, count) {
 
     xhr.upload.onprogress = e => {
       if (!e.lengthComputable) return;
+      
       const pct = Math.round(((uploaded + e.loaded) / total) * 100);
       progressBar.style.width = pct + '%';
       progressPercent.textContent = pct + '%';
       progressLabel.textContent = count === 1 ? file.name : `${num}/${count}: ${file.name}`;
+      
+      // Calculate time remaining
+      const elapsed = (Date.now() - uploadStart) / 1000;
+      if (elapsed > 1) {
+        const speed = (uploaded + e.loaded) / elapsed;
+        const remaining = (total - uploaded - e.loaded) / speed;
+        progressTime.textContent = formatTime(remaining) + ' left';
+      }
     };
 
     xhr.onload = () => {
@@ -81,6 +92,13 @@ function deleteFile(filepath, filename) {
     .finally(() => location.reload());
 }
 
+// Format seconds to readable time
+function formatTime(s) {
+  if (s < 60) return Math.round(s) + 's';
+  if (s < 3600) return Math.floor(s/60) + 'm ' + Math.round(s%60) + 's';
+  return Math.floor(s/3600) + 'h ' + Math.floor((s%3600)/60) + 'm';
+}
+
 // Reset form
 function resetForm() {
   progressContainer.classList.remove('show');
@@ -88,6 +106,7 @@ function resetForm() {
   fileInput.value = '';
   progressBar.style.width = '0';
   progressPercent.textContent = '0%';
+  progressTime.textContent = '';
 }
 
 // Prevent form submission
