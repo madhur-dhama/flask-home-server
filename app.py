@@ -7,7 +7,6 @@ sys.dont_write_bytecode = True  # Prevent __pycache__ creation
 
 import os
 import logging
-import tempfile
 import werkzeug
 from flask import (Flask, render_template, send_from_directory, request, jsonify)
 from werkzeug.utils import secure_filename
@@ -20,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 os.makedirs(SHARED_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
-tempfile.tempdir = TEMP_DIR
 os.environ['TMPDIR'] = TEMP_DIR
 
 app = Flask(__name__)
@@ -33,7 +31,6 @@ werkzeug.serving.WSGIRequestHandler.protocol_version = "HTTP/1.1"
 @app.route('/browse/')
 @app.route('/browse/<path:subpath>')
 def browse(subpath=''):
-    """List files and directories"""
     current_path = get_safe_path(subpath)
     files = list_files(current_path)
     
@@ -55,7 +52,6 @@ def browse(subpath=''):
 
 @app.route('/download/<path:filepath>')
 def download(filepath):
-    """Download file"""
     full_path = get_safe_path(filepath)
     return send_from_directory(
         os.path.dirname(full_path),
@@ -65,7 +61,6 @@ def download(filepath):
 
 @app.route('/delete/<path:filepath>', methods=['POST'])
 def delete(filepath):
-    """Delete file"""
     try:
         full_path = get_safe_path(filepath)
         
@@ -81,52 +76,28 @@ def delete(filepath):
         logger.info(f"Deleted: {filepath}")
         return jsonify({'success': True})
             
-    except Exception as e:
+    except Exception:
         logger.exception(f"Delete error: {filepath}")
         return jsonify({'success': False}), 500
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    """Handle uploads - reject if quota exceeded"""
     try:
-        if 'files' not in request.files:
-            return jsonify({'error': 'No files'}), 400
-
         files = request.files.getlist('files')
         upload_dir = get_safe_path(request.form.get('current_path', ''))
-        
-        uploaded = 0
-        
+
         for file in files:
-            if not file.filename:
+            if not file or not file.filename:
                 continue
-            
-            # Check quota
-            file.seek(0, 2)
-            file_size = file.tell()
-            file.seek(0)
-            
-            if file_size > get_free_space():
-                logger.warning(f"Rejected {file.filename} - quota exceeded")
-                continue
-            
-            # Handle duplicates
-            filename = secure_filename(file.filename)
-            base, ext = os.path.splitext(filename)
-            dest = os.path.join(upload_dir, filename)
-            counter = 1
-            while os.path.exists(dest):
-                dest = os.path.join(upload_dir, f"{base}_{counter}{ext}")
-                counter += 1
 
-            # Save file
+            name = secure_filename(file.filename)
+            dest = os.path.join(upload_dir, name)
             file.save(dest)
-            uploaded += 1
-            logger.info(f"Saved: {os.path.basename(dest)}")
+            logger.info(f"Saved {name}")
 
-        return jsonify({'success': True, 'count': uploaded})
+        return jsonify({'success': True})
 
-    except Exception as e:
+    except Exception:
         logger.exception("Upload error")
         return jsonify({'error': 'Upload failed'}), 500
 
