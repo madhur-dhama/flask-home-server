@@ -63,15 +63,6 @@ def download(filepath):
 def delete(filepath):
     try:
         full_path = get_safe_path(filepath)
-        
-        if not os.path.exists(full_path):
-            logger.warning(f"Delete failed - not found: {filepath}")
-            return jsonify({'success': False}), 404
-        
-        if not os.path.isfile(full_path):
-            logger.warning(f"Delete failed - is folder: {filepath}")
-            return jsonify({'success': False}), 400
-        
         os.remove(full_path)
         logger.info(f"Deleted: {filepath}")
         return jsonify({'success': True})
@@ -86,17 +77,17 @@ def upload():
         files = request.files.getlist('files')
         upload_dir = get_safe_path(request.form.get('current_path', ''))
 
+        if get_free_space() < 100 * 1024 * 1024: 
+            return jsonify({'error': 'Storage full'}), 507
+
         for file in files:
             if not file or not file.filename:
                 continue
-
-            name = secure_filename(file.filename)
-            dest = os.path.join(upload_dir, name)
+            dest = os.path.join(upload_dir, secure_filename(file.filename))
             file.save(dest)
-            logger.info(f"Saved {name}")
-
+            logger.info(f"Saved: {file.filename}")
+            
         return jsonify({'success': True})
-
     except Exception:
         logger.exception("Upload error")
         return jsonify({'error': 'Upload failed'}), 500
@@ -104,5 +95,4 @@ def upload():
 if __name__ == '__main__':
     logger.info(f"Serving: {SHARED_DIR}")
     logger.info(f"Access: http://<your-ip>:{PORT}")
-    logger.info(f"Max upload: {human_size(MAX_CONTENT_LENGTH)}")
     app.run(host=HOST, port=PORT, threaded=True, debug=False)

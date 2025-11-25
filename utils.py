@@ -7,34 +7,23 @@ import datetime
 from config import SHARED_DIR, STORAGE_QUOTA
 
 def human_size(n):
-    """Convert bytes to human-readable format"""
-    if n < 0:
-        return "0 B"
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if n < 1024.0:
-            return f"{n:3.1f} {unit}"
-        n /= 1024.0
+        if n < 1024:
+            return f"{n:.1f} {unit}"
+        n /= 1024
     return f"{n:.1f} PB"
 
 def get_safe_path(subpath=''):
-    """Prevent directory traversal and return safe path"""
-    if subpath:
-        requested = os.path.normpath(os.path.join(SHARED_DIR, subpath))
-        if not requested.startswith(SHARED_DIR):
-            return SHARED_DIR
-        return requested
-    return SHARED_DIR
+    requested = os.path.normpath(os.path.join(SHARED_DIR, subpath))
+    return requested if requested.startswith(SHARED_DIR) else SHARED_DIR
 
 def list_files(current_path):
-    """List files and folders with metadata"""
-    p = pathlib.Path(current_path)
     items = []
-    for entry in sorted(p.iterdir(), key=lambda x: (x.is_file(), x.name.lower())):
+    for entry in sorted(pathlib.Path(current_path).iterdir(), key=lambda x: (x.is_file(), x.name.lower())):
         stat = entry.stat()
-        rel_path = os.path.relpath(entry, SHARED_DIR)
         items.append({
             'name': entry.name,
-            'path': rel_path,
+            'path': os.path.relpath(entry, SHARED_DIR),
             'is_file': entry.is_file(),
             'size': human_size(stat.st_size) if entry.is_file() else '',
             'mtime': datetime.datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
@@ -42,7 +31,6 @@ def list_files(current_path):
     return items
 
 def get_breadcrumbs(current_path):
-    """Generate breadcrumbs for navigation"""
     rel_path = os.path.relpath(current_path, SHARED_DIR)
     if rel_path == '.':
         return []
@@ -53,21 +41,6 @@ def get_breadcrumbs(current_path):
         breadcrumbs.append({'name': part, 'path': cumulative})
     return breadcrumbs
 
-def get_directory_size(path):
-    """Recursively calculate total directory size"""
-    total = 0
-    try:
-        for entry in os.scandir(path):
-            if entry.is_file():
-                total += entry.stat().st_size
-            elif entry.is_dir():
-                total += get_directory_size(entry.path)
-    except Exception:
-        pass
-    return total
-
 def get_free_space():
-    """Return remaining storage quota"""
-    used = get_directory_size(SHARED_DIR)
-    free = STORAGE_QUOTA - used
-    return max(free, 0)
+    used = sum(f.stat().st_size for f in pathlib.Path(SHARED_DIR).rglob('*') if f.is_file())
+    return max(STORAGE_QUOTA - used, 0)
