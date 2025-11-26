@@ -1,4 +1,3 @@
-// Simple File Browser JS
 const form = document.getElementById('uploadForm');
 const fileInput = document.getElementById('fileInput');
 const progressContainer = document.getElementById('progressContainer');
@@ -8,37 +7,39 @@ const progressPercent = document.getElementById('progressPercent');
 const progressTime = document.getElementById('progressTime');
 let uploadStart = null;
 
-// Auto-upload on file selection
 fileInput.onchange = () => {
   if (fileInput.files.length) uploadFiles();
 };
+form.onsubmit = e => e.preventDefault();
 
-// Upload files
+// UPLOAD FUNCTIONS
 async function uploadFiles() {
   const files = Array.from(fileInput.files);
   if (!files.length) return;
 
-  // Storage check - ONLY 8 LINES ADDED
   const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+
+  // Storage Check
   const res = await fetch('/storage-check', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ size: totalSize })
   }).then(r => r.json()).catch(() => ({ available: false }));
-  
+
   if (!res.available) {
     alert('Not enough storage space!');
     fileInput.value = '';
     return;
   }
-  // End of storage check
 
+  // Initialize Progress UI
   progressContainer.classList.add('show');
   fileInput.disabled = true;
   uploadStart = Date.now();
 
   let uploadedSize = 0;
 
+  // Sequential Upload
   for (let i = 0; i < files.length; i++) {
     const formData = new FormData();
     formData.append('files', files[i]);
@@ -49,6 +50,7 @@ async function uploadFiles() {
     uploadedSize += files[i].size;
   }
 
+  // Completion
   progressLabel.textContent = 'Complete!';
   progressBar.style.width = '100%';
   progressPercent.textContent = '100%';
@@ -56,20 +58,21 @@ async function uploadFiles() {
   setTimeout(() => location.reload(), 800);
 }
 
-// Upload single file
+// Upload single file with progress tracking
 function uploadFile(formData, file, uploaded, total, num, count) {
   return new Promise(resolve => {
     const xhr = new XMLHttpRequest();
 
+    // Progress Tracking
     xhr.upload.onprogress = e => {
       if (!e.lengthComputable) return;
-      
+
       const pct = Math.round(((uploaded + e.loaded) / total) * 100);
       progressBar.style.width = pct + '%';
       progressPercent.textContent = pct + '%';
       progressLabel.textContent = count === 1 ? file.name : `${num}/${count}: ${file.name}`;
-      
-      // Calculate time remaining
+
+      // Calculate and display time remaining
       const elapsed = (Date.now() - uploadStart) / 1000;
       if (elapsed > 1) {
         const speed = (uploaded + e.loaded) / elapsed;
@@ -78,6 +81,7 @@ function uploadFile(formData, file, uploaded, total, num, count) {
       }
     };
 
+    // Success Handler
     xhr.onload = () => {
       if (xhr.status === 200) {
         resolve(true);
@@ -88,6 +92,7 @@ function uploadFile(formData, file, uploaded, total, num, count) {
       }
     };
 
+    // Error Handler
     xhr.onerror = () => {
       resetForm();
       resolve(false);
@@ -108,8 +113,8 @@ function deleteFile(filepath, filename) {
 // Format seconds to readable time
 function formatTime(s) {
   if (s < 60) return Math.round(s) + 's';
-  if (s < 3600) return Math.floor(s/60) + 'm ' + Math.round(s%60) + 's';
-  return Math.floor(s/3600) + 'h ' + Math.floor((s%3600)/60) + 'm';
+  if (s < 3600) return Math.floor(s / 60) + 'm ' + Math.round(s % 60) + 's';
+  return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
 }
 
 // Reset form
@@ -121,6 +126,3 @@ function resetForm() {
   progressPercent.textContent = '0%';
   progressTime.textContent = '';
 }
-
-// Prevent form submission
-form.onsubmit = e => e.preventDefault();

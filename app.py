@@ -3,28 +3,30 @@ Flask Home Server - Main Application
 Run: python app.py
 """
 import sys
-sys.dont_write_bytecode = True  # Prevent __pycache__ creation
+sys.dont_write_bytecode = True
 
 import os
 import logging
 import werkzeug
-from flask import (Flask, render_template, send_from_directory, request, jsonify)
+from flask import Flask, render_template, send_from_directory, request, jsonify
 from werkzeug.utils import secure_filename
 
-from config import (SHARED_DIR, TEMP_DIR, HOST, PORT, MAX_CONTENT_LENGTH, SECRET_KEY)
-from utils import (human_size, get_safe_path, list_files, get_breadcrumbs, get_free_space)
+from config import SHARED_DIR, TEMP_DIR, HOST, PORT, MAX_CONTENT_LENGTH, SECRET_KEY
+from utils import human_size, get_safe_path, list_files, get_breadcrumbs, get_free_space
 
+# --- Logging Setup ---
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
+# --- Initialize Directories ---
 os.makedirs(SHARED_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
 os.environ['TMPDIR'] = TEMP_DIR
 
+# --- Flask Configuration ---
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 app.secret_key = SECRET_KEY
-
 werkzeug.serving.WSGIRequestHandler.protocol_version = "HTTP/1.1"
 
 @app.route('/')
@@ -34,7 +36,6 @@ def browse(subpath=''):
     current_path = get_safe_path(subpath)
     files = list_files(current_path)
     
-    # Pagination
     page = request.args.get('page', 1, type=int)
     per_page = 50
     start = (page - 1) * per_page
@@ -66,7 +67,6 @@ def delete(filepath):
         os.remove(full_path)
         logger.info(f"Deleted: {filepath}")
         return jsonify({'success': True})
-            
     except Exception:
         logger.exception(f"Delete error: {filepath}")
         return jsonify({'success': False}), 500
@@ -77,10 +77,10 @@ def storage_check():
         data = request.get_json()
         upload_size = data.get('size', 0)
         free = get_free_space()
-        available = free > upload_size
-        return jsonify({'available': available, 'free': free})
+        return jsonify({'available': free > upload_size, 'free': free})
     except Exception:
-        return jsonify({'available': False, 'free': 0})
+        logger.exception("Storage check error")
+        return jsonify({'available': False, 'free': 0}), 400
 
 @app.route('/upload', methods=['POST'])
 def upload():
