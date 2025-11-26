@@ -71,22 +71,28 @@ def delete(filepath):
         logger.exception(f"Delete error: {filepath}")
         return jsonify({'success': False}), 500
 
+@app.route('/storage-check', methods=['POST'])
+def storage_check():
+    try:
+        data = request.get_json()
+        upload_size = data.get('size', 0)
+        free = get_free_space()
+        available = free > upload_size
+        return jsonify({'available': available, 'free': free})
+    except Exception:
+        return jsonify({'available': False, 'free': 0})
+
 @app.route('/upload', methods=['POST'])
 def upload():
     try:
         files = request.files.getlist('files')
         upload_dir = get_safe_path(request.form.get('current_path', ''))
-
-        if get_free_space() < 100 * 1024 * 1024: 
-            return jsonify({'error': 'Storage full'}), 507
-
         for file in files:
             if not file or not file.filename:
                 continue
             dest = os.path.join(upload_dir, secure_filename(file.filename))
             file.save(dest)
             logger.info(f"Saved: {file.filename}")
-            
         return jsonify({'success': True})
     except Exception:
         logger.exception("Upload error")

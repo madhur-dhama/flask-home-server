@@ -6,7 +6,6 @@ const progressBar = document.getElementById('progressBar');
 const progressLabel = document.getElementById('progressLabel');
 const progressPercent = document.getElementById('progressPercent');
 const progressTime = document.getElementById('progressTime');
-
 let uploadStart = null;
 
 // Auto-upload on file selection
@@ -19,11 +18,25 @@ async function uploadFiles() {
   const files = Array.from(fileInput.files);
   if (!files.length) return;
 
+  // Storage check - ONLY 8 LINES ADDED
+  const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+  const res = await fetch('/storage-check', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ size: totalSize })
+  }).then(r => r.json()).catch(() => ({ available: false }));
+  
+  if (!res.available) {
+    alert('Not enough storage space!');
+    fileInput.value = '';
+    return;
+  }
+  // End of storage check
+
   progressContainer.classList.add('show');
   fileInput.disabled = true;
   uploadStart = Date.now();
 
-  let totalSize = files.reduce((sum, f) => sum + f.size, 0);
   let uploadedSize = 0;
 
   for (let i = 0; i < files.length; i++) {
