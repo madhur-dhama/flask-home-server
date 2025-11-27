@@ -81,8 +81,19 @@ function uploadSingle(fd, file, uploaded, total, num, count) {
       }
     };
 
-    xhr.onload = () => res(xhr.status === 200);
-    xhr.onerror = () => res(false);
+   xhr.onload = () => {
+      if (xhr.status === 200) {
+        res(true);
+      } else {
+        alert(`Upload fail error : ${xhr.status}`);
+        res(false);
+      }
+    };
+
+    xhr.onerror = () => {
+      alert('Network error!');
+      res(false);
+    };
 
     xhr.open('POST', '/upload');
     xhr.send(fd);
