@@ -1,32 +1,20 @@
 # 🧩 Flask Home Server
 
-A **lightweight local file server** built with Flask for Linux.  
-Browse, upload, download, and stream your files — all from your web browser.  
-Works entirely **offline** on your **local Wi-Fi**, perfect for quick file sharing between your **pc and phone**.
+A **lightweight local file server** built with Flask for Linux. Browse, upload, download, and delete files — all from your web browser. Works entirely **offline** on your **local Wi-Fi**, perfect for quick file sharing between your **PC and phone**.
 
 ---
 
 ## 🚀 Features
 
-- 📂 **Browse files & folders**
-- ⬆️ **Upload multiple files**
-- ⬇️ **Download multiple files**
-- 🎵 **Stream audio files**
-- 🎬 **Stream video files** 
-- 🎮 **Built-in media player**
-- 💾 **Storage space monitoring**
-- 📊 **Upload progress tracking**
-- 🎨 **Modern dark theme** 
-- ⚡ **Works locally — no internet required**
-
----
-
-## ⚙️ How It Works
-
-Runs a small **Flask web server** that serves the `~/FileShare` folder.  
-You can manage your files through a clean, web-based interface accessible from any device on your Wi-Fi.
-
-Files are organized in folders, with full support for nested directory structures. The server handles large file uploads using chunked transfers and provides real-time progress feedback.
+- 📂 **Browse files & folders** with breadcrumb navigation
+- ⬆️ **Upload multiple files** with real-time progress tracking
+- ⬇️ **Download files** directly to your device
+- 🗑️ **Delete files** with confirmation dialog
+- 💾 **Storage quota enforcement** - prevents uploads when full
+- 📊 **Live upload progress** with time remaining estimates
+- 🎨 **Modern dark/light theme** (auto-detects system preference)
+- ⚡ **Works locally** — no internet required
+- 📱 **Mobile-friendly** responsive design
 
 ---
 
@@ -45,18 +33,16 @@ source ~/ve_flask/bin/activate
 pip install flask
 ```
 
-### 3. Run the server 
+### 3. Run the server
 ```bash
 python3 app.py
 ```
 
-### 4. Access it on your phone or another device
-Open in your browser:
-```
-http://<your-ip>:8000
-```
+### 4. Access from any device on your network
 
-**Example:** - `http://192.168.0.51:8000`
+Open in your browser: `http://<your-ip>:8000`
+
+**Example:** `http://192.168.0.10:8000`
 
 **To find your IP address:**
 ```bash
@@ -65,7 +51,7 @@ ip a | grep 'inet '
 
 ---
 
-## ▶️ Quick Start (next time)
+## ▶️ Quick Start (subsequent runs)
 ```bash
 source ~/ve_flask/bin/activate
 python3 app.py
@@ -74,10 +60,9 @@ python3 app.py
 ---
 
 ## 📁 Directory Structure
-
 ```
 ~/FileShare/          # All shared files (auto-created)
-~/.tmp/               # Temporary upload directory (auto-created)
+~/.tmp/               # Temporary upload staging (auto-created)
 flask-home-server/
 ├── app.py            # Main Flask application
 ├── config.py         # Configuration settings
@@ -89,43 +74,20 @@ flask-home-server/
 │   └── js/
 │       └── app.js         # Frontend JavaScript
 └── templates/
-    ├── index.html         # File browser interface
-    └── player.html        # Media player interface
+    └── index.html         # File browser interface
 ```
 
 ---
 
 ## 🧑‍💻 Tech Stack
 
-- **Backend:** Flask (Python 3)
-- **Frontend:** HTML5, CSS3, JavaScript
-- **Icons:** Font Awesome
-- **Platform:** Linux 
-- **Storage:** Local filesystem
-- **Server:** Werkzeug (Flask development server)
-
----
-
-## ⚙️ Configuration
-
-Edit `config.py` to customize:
-
-```python
-HOST = '0.0.0.0'                    # Listen on all interfaces
-PORT = 8000                          # Server port
-MAX_CONTENT_LENGTH = 100 * 1024³    # 100GB upload limit
-SHARED_DIR = "~/FileShare"          # Shared folder location
-TEMP_DIR = "~/.tmp"                 # Temporary upload directory
-```
-
----
-
-## 📊 Storage Limits
-
-- **Maximum file size:** 100 GB per file
-- **Total storage:** Limited by your disk space
-- **Upload capacity:** Multiple files simultaneously
-- **Storage tracking:** Real-time free space display in header
+- **Backend:** Flask + Python 3
+- **Frontend:** Vanilla JavaScript
+- **Styling:** CSS3 with CSS variables for theming
+- **Icons:** Font Awesome 6
+- **Platform:** Linux (tested on Arch)
+- **Storage:** Local filesystem with quota management
+- **Server:** Werkzeug development server (HTTP/1.1)
 
 ---
 
