@@ -13,9 +13,8 @@ TEMP_DIR = os.path.join(os.path.expanduser("~"), ".tmp")
 
 # Upload configuration
 ALLOWED_EXTENSIONS = None  # None = allow all types
-MAX_CONTENT_LENGTH = 100 * 1024 * 1024 * 1024  # Upload limit per request
-
+MAX_CONTENT_LENGTH = 40 * 1024 * 1024 * 1024  # Upload limit per request
 STORAGE_QUOTA = 100 * 1024 * 1024 * 1024  # total storage limit
 
 # Security
-SECRET_KEY = 'local-secret-change-if-needed'
+SECRET_KEY = 'bW2jjbb@#b'

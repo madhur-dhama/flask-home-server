@@ -23,11 +23,7 @@ async function uploadFiles() {
     body: JSON.stringify({ size: total })
   }).then(r => r.json()).catch(() => ({ available: false }));
 
-  if (!check.available) {
-    alert('Not enough storage');
-    fileInput.value = '';
-    return;
-  }
+  if (!check.available) return alert('Upload failed - Error: Storage full'), void(fileInput.value = '');
 
   // Show progress UI and disable file input
   startTime = Date.now();
@@ -42,17 +38,12 @@ async function uploadFiles() {
     fd.append('files', files[i]);
     fd.append('current_path', form.querySelector('[name="current_path"]').value);
 
-    const ok = await uploadSingle(fd, files[i], uploaded, total, i + 1, files.length);
-    if (!ok) {
-      reset();
-      return;
-    }
+    if (!await uploadSingle(fd, files[i], uploaded, total, i + 1, files.length)) return reset();
     uploaded += files[i].size;
   }
 
   // All files done - show completion
-  bar.style.width = '100%';
-  pctLabel.textContent = '100%';
+  bar.style.width = pctLabel.textContent = '100%';
   nameLabel.textContent = 'Complete!';
   timeLabel.textContent = 'Done!';
   setTimeout(() => location.reload(), 500);
@@ -68,32 +59,19 @@ function uploadSingle(fd, file, uploaded, total, num, count) {
       if (!e.lengthComputable) return;
       const pct = Math.round((uploaded + e.loaded) / total * 100);
 
-      bar.style.width = pct + '%';
-      pctLabel.textContent = pct + '%';
+      bar.style.width = pctLabel.textContent = pct + '%';
       nameLabel.textContent = count === 1 ? file.name : `${num}/${count}: ${file.name}`;
 
       // Calculate time remaining
       const elapsed = (Date.now() - startTime) / 1000;
       if (elapsed > 1) {
         const speed = (uploaded + e.loaded) / elapsed;
-        const left = (total - uploaded - e.loaded) / speed;
-        timeLabel.textContent = formatTime(left) + ' left';
+        timeLabel.textContent = formatTime((total - uploaded - e.loaded) / speed) + ' left';
       }
     };
 
-   xhr.onload = () => {
-      if (xhr.status === 200) {
-        res(true);
-      } else {
-        alert(`Upload fail error : ${xhr.status}`);
-        res(false);
-      }
-    };
-
-    xhr.onerror = () => {
-      alert('Network error!');
-      res(false);
-    };
+    xhr.onload = () => res(xhr.status === 200 || (alert(`Upload failed - Error: ${xhr.status}`), false));
+    xhr.onerror = () => res((alert('Upload failed - Error: Network'), false));
 
     xhr.open('POST', '/upload');
     xhr.send(fd);
@@ -108,17 +86,16 @@ function deleteFile(path, name) {
 
 // Convert seconds to readable format (45s, 2m 30s, 1h 15m)
 function formatTime(s) {
-  if (s < 60) return Math.round(s) + 's';
-  if (s < 3600) return Math.floor(s / 60) + 'm ' + Math.round(s % 60) + 's';
-  return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
+  return s < 60 ? Math.round(s) + 's' : 
+         s < 3600 ? Math.floor(s / 60) + 'm ' + Math.round(s % 60) + 's' :
+         Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
 }
 
 // Clear progress UI after error or cancel
 function reset() {
   progress.classList.remove('show');
   fileInput.disabled = false;
-  fileInput.value = '';
-  bar.style.width = '0';
+  fileInput.value = bar.style.width = '0';
   pctLabel.textContent = '0%';
   timeLabel.textContent = '';
 }
