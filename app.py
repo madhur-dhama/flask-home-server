@@ -87,22 +87,29 @@ def storage_check():
 @app.route('/upload', methods=['POST'])
 def upload():
     try:
-        content_length = request.content_length or 0        
-        if content_length > 0 and get_free_space() < content_length:
-            logger.warning("Upload rejected - storage quota exceeded")
-            return jsonify({'error': 'Storage quota exceeded'}), 507
-        
+        current_subpath = request.form.get('current_path', '')
+        upload_dir = get_safe_path(current_subpath)
         files = request.files.getlist('files')
-        upload_dir = get_safe_path(request.form.get('current_path', ''))
-        for file in files:
-            if file and file.filename:
-                file.save(os.path.join(upload_dir, secure_filename(file.filename)))
-                logger.info(f"Saved: {file.filename}")
+        if files:
+            # Handle normal small files
+            for f in files:
+                if f.filename:
+                    f.save(os.path.join(upload_dir, secure_filename(f.filename)))
+                    logger.info(f"Saved (small): {f.filename}")
+        else:
+            # Handle large streamed file
+            file_name = request.headers.get('X-Filename')
+            safe_name = secure_filename(file_name)
+            final_path = os.path.join(upload_dir, safe_name)
+            with open(final_path, 'wb') as f:
+                while chunk := request.stream.read(1024*1024):  # 1 MB chunks
+                    f.write(chunk)
+            logger.info(f"Saved (stream): {safe_name}")
         return jsonify({'success': True})
-        
+
     except Exception as e:
         logger.exception("Upload error")
-        return jsonify({'error': f'{type(e).__name__}: {str(e)}'}), 500
+        return jsonify({'error': f'{type(e).__name__}: {e}'}), 500
 
 if __name__ == '__main__':
     logger.info(f"Serving: {SHARED_DIR}")
