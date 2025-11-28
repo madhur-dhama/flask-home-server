@@ -87,7 +87,7 @@ def storage_check():
 @app.route('/upload', methods=['POST'])
 def upload():
     try:
-        current_subpath = request.form.get('current_path', '')
+        current_subpath = request.headers.get('X-Upload-Path') or request.form.get('current_path', '')
         upload_dir = get_safe_path(current_subpath)
         files = request.files.getlist('files')
         if files:

@@ -59,7 +59,6 @@ function uploadSingle(file, current_path, uploaded, total, num, count) {
     xhr.upload.onprogress = (e) => {
       if (!e.lengthComputable) return;
       const pct = Math.round((uploaded + e.loaded) / total * 100);
-
       bar.style.width = pctLabel.textContent = pct + '%';
       nameLabel.textContent = count === 1 ? file.name : `${num}/${count}: ${file.name}`;
 
@@ -71,24 +70,19 @@ function uploadSingle(file, current_path, uploaded, total, num, count) {
     };
 
     xhr.onload = () => {
-      if (xhr.status === 200) {
-        resolve(true);
-        return;
-      }
+      if (xhr.status === 200) { resolve(true); return; }
       let err = xhr.status;
       try { err = JSON.parse(xhr.responseText).error || err; } catch {}
       alert(`Upload failed - ${err}`);
       resolve(false);
     };
 
-    xhr.onerror = () => {
-      alert('Upload failed - Network error');
-      resolve(false);
-    };
+    xhr.onerror = () => { alert('Upload failed - Network error'); resolve(false); };
 
     xhr.open('POST', '/upload');
     xhr.setRequestHeader('X-Filename', file.name);
-    xhr.send(file); // send raw file for streaming
+    xhr.setRequestHeader('X-Upload-Path', current_path);
+    xhr.send(file);
   });
 }
 
