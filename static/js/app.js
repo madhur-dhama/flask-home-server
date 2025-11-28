@@ -15,7 +15,6 @@ async function uploadFiles() {
   const files = [...fileInput.files];
   const total = files.reduce((sum, f) => sum + f.size, 0);
 
-  // Check server storage
   const check = await fetch('/storage-check', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -23,7 +22,7 @@ async function uploadFiles() {
   }).then(r => r.json()).catch(() => ({ available: false }));
 
   if (!check.available) {
-    alert(check.error || 'Upload failed - Storage full');
+    alert('Upload failed - Storage full');
     fileInput.value = '';
     return;
   }
@@ -37,7 +36,6 @@ async function uploadFiles() {
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const current_path = form.querySelector('[name="current_path"]').value;
-
     if (!await uploadSingle(file, current_path, uploaded, total, i + 1, files.length)) {
       reset();
       return;
@@ -47,11 +45,9 @@ async function uploadFiles() {
 
   bar.style.width = pctLabel.textContent = '100%';
   nameLabel.textContent = 'Complete!';
-  timeLabel.textContent = 'Done!';
   setTimeout(() => location.reload(), 500);
 }
 
-// Upload a single file using raw body for streaming
 function uploadSingle(file, current_path, uploaded, total, num, count) {
   return new Promise(resolve => {
     const xhr = new XMLHttpRequest();
@@ -61,7 +57,7 @@ function uploadSingle(file, current_path, uploaded, total, num, count) {
       const pct = Math.round((uploaded + e.loaded) / total * 100);
       bar.style.width = pctLabel.textContent = pct + '%';
       nameLabel.textContent = count === 1 ? file.name : `${num}/${count}: ${file.name}`;
-
+      
       const elapsed = (Date.now() - startTime) / 1000;
       if (elapsed > 1) {
         const speed = (uploaded + e.loaded) / elapsed;
@@ -86,17 +82,14 @@ function uploadSingle(file, current_path, uploaded, total, num, count) {
   });
 }
 
-// Delete file action
 function deleteFileAction(e, path, name) {
   e.stopPropagation();
   if (!confirm(`Delete "${name}"?`)) return;
   
   fetch(`/delete/${encodeURIComponent(path)}`, { method: 'POST' })
     .then(r => r.json())
-    .then(data => {
-      if (!data.success && data.error) alert(`Delete failed - ${data.error}`);
-    })
-    .catch(() => alert('Delete failed - Network error'))
+    .then(data => { if (!data.success) alert('Delete failed'); })
+    .catch(() => alert('Delete failed'))
     .finally(() => location.reload());
 }
 
@@ -111,7 +104,7 @@ function reset() {
   fileInput.disabled = false;
   fileInput.value = '';
   bar.style.width = '0';
-  pctLabel.textContent = '0';
+  pctLabel.textContent = '0%';
   nameLabel.textContent = '';
   timeLabel.textContent = '';
 }
