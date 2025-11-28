@@ -9,12 +9,12 @@ const timeLabel = document.getElementById('progressTime');
 let startTime = 0;
 
 fileInput.onchange = () => fileInput.files.length && uploadFiles();
-form.onsubmit = e => e.preventDefault();
+form.onsubmit = (e) => e.preventDefault();
 
 // Main upload process
 async function uploadFiles() {
   const files = [...fileInput.files];
-  const total = files.reduce((s, f) => s + f.size, 0);
+  const total = files.reduce((sum, f) => sum + f.size, 0);
 
   // Check if server has space
   const check = await fetch('/storage-check', {
@@ -23,26 +23,33 @@ async function uploadFiles() {
     body: JSON.stringify({ size: total })
   }).then(r => r.json()).catch(() => ({ available: false }));
 
-  if (!check.available) return alert('Upload failed - Error: Storage full'), void(fileInput.value = '');
+  if (!check.available) {
+    alert(check.error || 'Upload failed - Storage full');
+    fileInput.value = '';
+    return;
+  }
 
-  // Show progress UI and disable file input
+  // Show progress UI
   startTime = Date.now();
   progress.classList.add('show');
   fileInput.disabled = true;
 
   let uploaded = 0;
 
-  // Upload each file one by one
+  // Upload each file
   for (let i = 0; i < files.length; i++) {
-    const fd = new FormData();
-    fd.append('files', files[i]);
-    fd.append('current_path', form.querySelector('[name="current_path"]').value);
+    const formData = new FormData();
+    formData.append('files', files[i]);
+    formData.append('current_path', form.querySelector('[name="current_path"]').value);
 
-    if (!await uploadSingle(fd, files[i], uploaded, total, i + 1, files.length)) return reset();
+    if (!await uploadSingle(formData, files[i], uploaded, total, i + 1, files.length)) {
+      reset();
+      return;
+    }
     uploaded += files[i].size;
   }
 
-  // All files done - show completion
+  // Complete
   bar.style.width = pctLabel.textContent = '100%';
   nameLabel.textContent = 'Complete!';
   timeLabel.textContent = 'Done!';
@@ -50,12 +57,12 @@ async function uploadFiles() {
 }
 
 // Upload one file and track progress
-function uploadSingle(fd, file, uploaded, total, num, count) {
-  return new Promise(res => {
+function uploadSingle(formData, file, uploaded, total, num, count) {
+  return new Promise(resolve => {
     const xhr = new XMLHttpRequest();
 
     // Update progress bar while uploading
-    xhr.upload.onprogress = e => {
+    xhr.upload.onprogress = (e) => {
       if (!e.lengthComputable) return;
       const pct = Math.round((uploaded + e.loaded) / total * 100);
 
@@ -70,32 +77,54 @@ function uploadSingle(fd, file, uploaded, total, num, count) {
       }
     };
 
-    xhr.onload = () => res(xhr.status === 200 || (alert(`Upload failed - Error: ${xhr.status}`), false));
-    xhr.onerror = () => res((alert('Upload failed - Error: Network'), false));
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        resolve(true);
+        return;
+      }
+      let err = xhr.status;
+      try { err = JSON.parse(xhr.responseText).error || err; } catch {}
+      alert(`Upload failed - ${err}`);
+      resolve(false);
+    };
+
+    xhr.onerror = () => {
+      alert('Upload failed - Network error');
+      resolve(false);
+    };
 
     xhr.open('POST', '/upload');
-    xhr.send(fd);
+    xhr.send(formData);
   });
 }
 
 // Delete file
 function deleteFile(path, name) {
   if (!confirm(`Delete "${name}"?`)) return;
-  fetch('/delete/' + path, { method: 'POST' }).finally(() => location.reload());
+  
+  fetch(`/delete/${path}`, { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success && data.error) alert(`Delete failed - ${data.error}`);
+    })
+    .catch(() => alert('Delete failed - Network error'))
+    .finally(() => location.reload());
 }
 
-// Convert seconds to readable format (45s, 2m 30s, 1h 15m)
+// Convert seconds to readable format
 function formatTime(s) {
   return s < 60 ? Math.round(s) + 's' : 
          s < 3600 ? Math.floor(s / 60) + 'm ' + Math.round(s % 60) + 's' :
          Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
 }
 
-// Clear progress UI after error or cancel
+// Reset progress UI
 function reset() {
   progress.classList.remove('show');
   fileInput.disabled = false;
-  fileInput.value = bar.style.width = '0';
+  fileInput.value = '';
+  bar.style.width = '0';
   pctLabel.textContent = '0%';
+  nameLabel.textContent = '';
   timeLabel.textContent = '';
 }

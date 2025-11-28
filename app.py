@@ -8,22 +8,24 @@ sys.dont_write_bytecode = True
 import os
 import logging
 import werkzeug
+import tempfile
 from flask import Flask, render_template, send_from_directory, request, jsonify
 from werkzeug.utils import secure_filename
 
 from config import SHARED_DIR, TEMP_DIR, HOST, PORT, MAX_CONTENT_LENGTH, SECRET_KEY
 from utils import human_size, get_safe_path, list_files, get_breadcrumbs, get_free_space
 
-# --- Logging Setup ---
+# Logging Setup
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-# --- Initialize Directories ---
+# Initialize Directories
 os.makedirs(SHARED_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
 os.environ['TMPDIR'] = TEMP_DIR
+tempfile.tempdir = TEMP_DIR 
 
-# --- Flask Configuration ---
+# Flask Configuration
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 app.secret_key = SECRET_KEY
@@ -67,9 +69,9 @@ def delete(filepath):
         os.remove(full_path)
         logger.info(f"Deleted: {filepath}")
         return jsonify({'success': True})
-    except Exception:
+    except Exception as e:
         logger.exception(f"Delete error: {filepath}")
-        return jsonify({'success': False}), 500
+        return jsonify({'success': False, 'error': f'{type(e).__name__}: {str(e)}'}), 500
 
 @app.route('/storage-check', methods=['POST'])
 def storage_check():
@@ -78,25 +80,29 @@ def storage_check():
         upload_size = data.get('size', 0)
         free = get_free_space()
         return jsonify({'available': free > upload_size, 'free': free})
-    except Exception:
+    except Exception as e:
         logger.exception("Storage check error")
-        return jsonify({'available': False, 'free': 0}), 400
+        return jsonify({'available': False, 'free': 0, 'error': f'{type(e).__name__}: {str(e)}'}), 400
 
 @app.route('/upload', methods=['POST'])
 def upload():
     try:
+        content_length = request.content_length or 0        
+        if content_length > 0 and get_free_space() < content_length:
+            logger.warning("Upload rejected - storage quota exceeded")
+            return jsonify({'error': 'Storage quota exceeded'}), 507
+        
         files = request.files.getlist('files')
         upload_dir = get_safe_path(request.form.get('current_path', ''))
         for file in files:
-            if not file or not file.filename:
-                continue
-            dest = os.path.join(upload_dir, secure_filename(file.filename))
-            file.save(dest)
-            logger.info(f"Saved: {file.filename}")
+            if file and file.filename:
+                file.save(os.path.join(upload_dir, secure_filename(file.filename)))
+                logger.info(f"Saved: {file.filename}")
         return jsonify({'success': True})
-    except Exception:
+        
+    except Exception as e:
         logger.exception("Upload error")
-        return jsonify({'error': 'Upload failed'}), 500
+        return jsonify({'error': f'{type(e).__name__}: {str(e)}'}), 500
 
 if __name__ == '__main__':
     logger.info(f"Serving: {SHARED_DIR}")
