@@ -98,11 +98,12 @@ function uploadSingle(formData, file, uploaded, total, num, count) {
   });
 }
 
-// Delete file
-function deleteFile(path, name) {
+// Delete file with proper encoding
+function deleteFileAction(e, path, name) {
+  e.stopPropagation();
   if (!confirm(`Delete "${name}"?`)) return;
   
-  fetch(`/delete/${path}`, { method: 'POST' })
+  fetch(`/delete/${encodeURIComponent(path)}`, { method: 'POST' })
     .then(r => r.json())
     .then(data => {
       if (!data.success && data.error) alert(`Delete failed - ${data.error}`);
