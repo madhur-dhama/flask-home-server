@@ -22,7 +22,7 @@ A **lightweight local file server** built with Flask for Linux. Browse, upload, 
 
 ### 1. Clone this repo
 ```bash
-git clone https://github.com/madhur-dhama/flask-home-server.git
+git clone https://github.com/madhurdhama/flask-home-server.git
 cd flask-home-server
 ```
 
